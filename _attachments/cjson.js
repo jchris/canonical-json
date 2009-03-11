@@ -36,7 +36,9 @@
 // methods in a closure to avoid creating global variables.
 
 if (!this.CJSON) {
-    CJSON = {};
+    CJSON = {
+      floatPrecision: 8
+    };
 }
 (function () {
 
@@ -78,6 +80,10 @@ if (!this.CJSON) {
             '"' + string + '"';
     }
 
+    function roundNum(num) {
+      var mult = Math.pow(10, CJSON.floatPrecision);
+      return Math.round(num * mult) / mult;
+    };
 
     function str(key, holder) {
 
@@ -115,7 +121,7 @@ if (!this.CJSON) {
 
 // JSON numbers must be finite. Encode non-finite numbers as null.
 
-            return isFinite(value) ? String(value) : 'null';
+            return isFinite(value) ? String(roundNum(value)) : 'null';
 
         case 'boolean':
         case 'null':

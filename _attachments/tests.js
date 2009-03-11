@@ -12,7 +12,6 @@ var couchTests = {
       "zam" : "zing"
     };
     var c = CJSON.stringify(obj);
-    console.log(c);
     T(c == '{"baz":"bam","foo":"bar","zam":"zing"}');
   },
   sorted_recursive : function() {
@@ -26,8 +25,17 @@ var couchTests = {
       "zam" : "zing"
     };
     var c = CJSON.stringify(obj);
-    console.log(c);
     T(c == '{"baz":{"abba":1,"fabba":2,"zabba":3},"foo":"bar","zam":"zing"}');
   },
-  
+  floats_rounded : function() {
+    CJSON.floatPrecision = 2;
+    var obj = {
+      tiny : (1/99999999999999999999999999),
+      third : (1/3),
+      sixes : (2/3)
+    };
+    var c = CJSON.stringify(obj);
+    // maybe I would prefer if tiny were 0.00
+    T(c == '{"sixes":0.67,"third":0.33,"tiny":0}');
+  }
 }
