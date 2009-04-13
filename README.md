@@ -44,5 +44,5 @@ Example final document
         "public-key" : "5s2457d357f47io46u135h35as5df135oi235ugs4a35df57ou7y5g1s5d5f58ou1s3d4f==",
         "signed-hash" : "h235h345h3147j23j35g1235344j3246h46jg3245j==",
       },
-      "foo" : ["this conent is not signed", "it's just here"]
+      "foo" : ["this content is not signed", "it's just here"]
     }

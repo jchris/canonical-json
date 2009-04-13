@@ -1,0 +1,154 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type"
+content="text/html; charset=iso-8859-1">
+<meta name="GENERATOR" content="Microsoft FrontPage Express 2.0">
+<title>JavaScript Shopping & Crypto - Summary</title>
+</head>
+
+<body>
+
+<h1>JavaScript Shopping &amp; Crypto - Summary</h1>
+
+<p><a href="http://sourceforge.net"><img
+src="http://sourceforge.net/sflogo.php?group_id=16456"
+alt="SourceForge Logo" align="right" border="0" hspace="2"></a> </p>
+
+<p>Why do we need another shopping cart? Here's what this project
+is about:</p>
+
+<ul>
+    <li>Easy to setup</li>
+    <li>Flexible</li>
+    <li>Easily integrates with your product line</li>
+    <li>Requires little or no CGI scripting</li>
+    <li>Can be run from ANY web host</li>
+    <li>Secure</li>
+    <li>Provides a responsive, comfortable, and understandable
+        shopping experience</li>
+    <li>Reduces server load -- no dynamic pages, no encryption
+        overhead</li>
+</ul>
+
+<h2>Show me the goods!</h2>
+
+<ul>
+    <li>See the <a href="myshop.htm">cart demo</a> -- doesn't
+        actually transmit the order.</li>
+    <li>Generate <a href="crypto2.htm">RSA keys</a> and see how
+        fast it is on your browser.</li>
+<li>Download the python server-side decoder <a href=decode.py>here</a>.
+<li>Download the perl server-side decoder <a href=decode.pl>here</a>.
+    <li>Older page of <a href="crypto.htm">crypto stuff</a> --
+        but still educational and shows other aspects of the
+        crypto library.</li>
+    <li>See the news on the <a
+        href="http://sourceforge.net/projects/shop-js/">summary
+        page</a> for the project status and some other things.</li>
+</ul>
+
+<h2>How do I get it?</h2>
+
+<p>When I feel like I have the project stable I'll put it in a .ZIP
+archive and upload it. Until then, the files from the cart demo
+are really all you need:</p>
+
+<ul>
+    <li>myshop.htm</li>
+    <li>mybuy.htm</li>
+    <li>myshop.js</li>
+    <li>crypto.js</li>
+    <li>crypto2.htm -- optional: use to generate keys, or just
+        use the one <a href="crypto2.htm">here</a>.</li>
+</ul>
+
+<h2>How do you do a cart without CGI?</h2>
+
+<p>I'm so glad you asked. JavaScript's use of cookies makes
+tracking simple interactivity, like a shopping cart, easy. What's
+more, its rudementary math and array handling give enough tools
+to do relatively secure encryption WITHIN THE BROWSER.</p>
+
+<p>Making a cart which tracks items is quite easy -- there are
+many interesting JavaScript shopping carts.</p>
+
+<p>Making a cart which can encrypt the order -- that's new. </p>
+
+<p>How does it work? </p>
+
+<p>The mathematics behind RSA public key encryption have been
+well known for years, and now with RSA's opening of the
+copyright, we can use them in this type of application. There are
+many articles documenting the mathematics behind RSA, so I won't
+repeat those here. I have written simple functions to do
+arbitrary-precision math (ie math with really big numbers) and
+functions which use these to securely encrypt orders using the
+programming language buit into nearly every web browser on the
+Internet today.</p>
+
+<h2>How fast is it? Is it really secure?</h2>
+
+<p>See the crypto demo to see how fast it is on your browser, but
+for most people, encrypting an order with a safe key can be done
+in 1 or 2 seconds. Decrypting takes a bit longer: 5 to 30 seconds
+depending on the speed of your computer and how large a key
+you've chosen.</p>
+
+<p>As for security, there's two issues: key size and the &quot;man
+in the middle&quot; problem. Most RSA programs today use from
+1024 to 2048 bits for encoding today. Occasionally you can still
+find 512 bit programs. I've found 512 bits (32 byte p &amp; q)
+completely functional with this program, and I'd think it's
+reasonably safe: During the a recent RSA challenge (August 1999)
+a 512-bit digit was factored. This required 35.7 CPU-years
+distributed on 292 workstations and high-speed computers, plus a
+massive amount of storage for intermediate results. Calendar time
+was 3.7 months. This considerable effort has to be repeated for
+each RSA key to crack. This means that a 512-bit RSA key can be
+cracked -- if it is worth spending so much resource.</p>
+
+<p>If decrypting time isn't important to you, or you have a very
+fast computer, 1024 bit keys (64 byte p &amp; q) will work
+nicely, or you can go as high as you want.</p>
+
+<p>These algorythms encode a random session key. This session key
+is used with RC4 to encrypt the message. The session key is the
+same length as the RSA modulo, so a 512 bit modulo will generate
+a 512 bit session key for use with the RC4 / ARCFOUR encryption
+algorythm.</p>
+
+<p>The other problem is the &quot;<a
+href="http://www.incrypt.com/mitma.html" target="_blank">Man in
+the Middle</a>&quot; attack. For our purposes this means that
+either Evil Hacker breaks in to your http server and replaces
+your public key and delivery mechanism with his own or he
+modifies your IP packets on the fly to the same effect. SSL
+prevents this by Thawte or VeriSign signing your server
+certificate (for a price), but because my crypto routines don't
+include a transport protocol, there's no practical way to verify
+authenticity. I think this is an acceptable risk for most of my
+situations. However, owners should keep an eye on their files to
+verify that Evil Hacker hasn't done his/her mischief.</p>
+
+<p>So, (if you're paranoid) no, it's not really secure, but yes,
+it is on a par with what you find elsewhere.</p>
+
+<h2>Has it been checked?</h2>
+
+<p>I intend to have it checked by cryptography experts when I'm
+done tweeking it. It hasn't yet been verified though. Watch the
+project news and I'll post when it's verified. Know any
+cryptography experts who want to verify my work?</p>
+
+<h2>Mirrors of other JavaScript Crypto tools:</h2><ul>
+<li><a href=md5.js>MD5.js</a> from <a href=http://pajhome.org.uk/crypt/md5/>http://pajhome.org.uk/crypt/md5/</a>
+<ul><li>also <a href=md4.js>MD4.js</a>
+<li><a href=sha1.js>SHA-1.js</a>
+</ul>
+<li><a href=rijndael.js>Rijndael.js</a> from <a href=http://www-cse.ucsd.edu/~fritz/rijndael.html>http://www-cse.ucsd.edu/~fritz/rijndael.html</a>
+<li><a href="http://www.hanewin.de/encrypt/main.htm">OpenPGP and AES</a> Javascript implementation by Herbert Hanewinkel.
+</ul>
+<p align="right"><font size="1">updated 2/9/05</font></p>
+</body>
+</html>

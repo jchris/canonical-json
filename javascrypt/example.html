@@ -1,0 +1,676 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>JavaScrypt Tutorial</title>
+<style type="text/css">
+    body {
+        margin-left: 15%;
+        margin-right: 10%;
+	background-color: #FFFFFF;
+	color: #000000;
+    }
+</style>
+
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<meta name="keywords" content="javascrypt, tutorial, example, encryption, steganography, javascript" />
+<meta name="description" content="JavaScrypt Tutorial" />
+<meta name="author" content="John Walker" />
+<meta name="robots" content="index" />
+
+<script type="text/javascript" language="JavaScript">
+<!-- 
+
+    var sampleWindow = null;
+    var encryptedText = null,
+    	hiddenText = null;
+    
+    //	Encrypt message example buttons
+
+    function launchButton() {
+    	if (sampleWindow) {
+	    unLoadPage();
+	}
+    	sampleWindow = window.open("javascrypt.html", "sampleWindow");
+    }
+    
+    function setKeyButton() {
+    	sampleWindow.document.key.scrollIntoView();
+    	sampleWindow.document.key.text.value = "serious hacker you don't let flames bother you.  Instead";
+	sampleWindow.document.key.keytype[0].checked = true;
+    }
+    
+    function pastePlainButton() {
+    	sampleWindow.document.plain.scrollIntoView();
+    	sampleWindow.document.plain.text.value =
+	    "Proceed with operation BAGPIPE FJORD, highest priority.\n";
+    }
+    
+    function encryptButton() {
+    	sampleWindow.document.cipher.scrollIntoView();
+    	sampleWindow.document.plain.encrypt.click();
+	encryptedText = sampleWindow.document.cipher.text.value;
+    }
+    
+    //	Decrypt message example buttons
+    
+    function pasteCipherButton() {
+	sampleWindow.document.cipher.scrollIntoView();
+	sampleWindow.document.cipher.text.value = "172/28\n" + encryptedText;
+    }
+    
+    function decryptButton() {
+    	sampleWindow.document.plain.scrollIntoView();
+    	sampleWindow.document.cipher.decrypt.click();
+    }
+    
+    //	Steganography example buttons
+    
+    function launchStego() {
+    	if (sampleWindow) {
+	    unLoadPage();
+	}
+    	sampleWindow = window.open("stego.html", "sampleWindow");
+    }
+    
+    function pasteStegoCipherButton() {
+	sampleWindow.document.cipher.scrollIntoView();
+	sampleWindow.document.cipher.text.value = encryptedText;
+    }
+    
+    function hideButton() {
+    	sampleWindow.document.plain.scrollIntoView();
+    	sampleWindow.document.cipher.hide.click();
+	hiddenText = sampleWindow.document.plain.text.value;
+    }
+    
+    function pasteStegoHiddenButton() {
+	sampleWindow.document.plain.scrollIntoView();
+	sampleWindow.document.plain.text.value = hiddenText;
+    }
+    
+    function seekButton() {
+    	sampleWindow.document.cipher.scrollIntoView();
+    	sampleWindow.document.plain.seek.click();
+	encryptedText = sampleWindow.document.cipher.text.value;
+    }
+    
+    //	Pass phrase example buttons
+    
+        
+    function launchPassPhrase() {
+    	if (sampleWindow) {
+	    unLoadPage();
+	}
+    	sampleWindow = window.open("pass_phrase.html", "sampleWindow");
+    }
+    
+    function passPhraseGenerateSeed() {
+    	sampleWindow.document.seed.scrollIntoView();
+    	sampleWindow.document.seed.generate.click();
+    }
+    
+    function passPhraseGeneratePhrases() {
+    	sampleWindow.document.results.scrollIntoView();
+    	sampleWindow.document.results.generate.click();
+    }
+    
+    function codeNameGeneratePhrases() {
+    	sampleWindow.document.results.howlong.value = 2;
+    	sampleWindow.document.results.howmany.value = 24;
+	sampleWindow.document.results.uppercase.checked = true;
+    	sampleWindow.document.results.scrollIntoView();
+    	sampleWindow.document.results.generate.click();
+    }
+    
+    function codeNameReGeneratePhrases() {
+    	sampleWindow.document.results.scrollIntoView();
+    	sampleWindow.document.seed.generate.click();
+    	sampleWindow.document.results.generate.click();
+    }
+
+    //	Housekeeping
+    
+    function unLoadPage() {
+    	if (sampleWindow) {
+	    sampleWindow.close();
+	    sampleWindow = null;
+	}
+    }
+
+// -->
+</script>
+
+</head>
+
+<body onunload="unLoadPage();">
+
+<h1>JavaScrypt Tutorial</h1>
+
+<hr style="background-color: rgb(192, 192, 192); color: #000000;" />
+
+<p>
+I hear you.  <em>What do I do with all this stuff?</em>  Encryption is simple in
+concept (only the good guys can read your message), but devilish in the
+details.  Here's a simple set of worked examples which illustrate
+some of the ways you can use JavaScrypt to protect your privacy.
+These examples open an auxiliary browser window in which various JavaScrypt
+components are demonstrated.  Please use the buttons in <em>this page</em>
+exclusively; pressing the buttons in the popped-up window may confuse the
+sequencing of the example.
+</p>
+
+<p>
+Crypto-folk usually couch their examples in terms of messages
+sent between the virtuous "Alice" and "Bob", who wish to avoid
+them being intercepted and read by the nefarious "Eve".  I'll
+follow that convention here, so let's join Alice and Bob as
+they hatch a plot.
+</p>
+
+<form name="key" action="#" onsubmit="return false;">
+
+<h2><a name="Encrypt">Encrypt a Message</a></h2>
+
+<p>
+We'll begin by encrypting a short message from Alice
+at headquarters to Bob in the field.  First, Alice loads the 
+JavaScript page into her browser.  Press the button below to
+launch JavaScrypt in a new window.
+</p>
+
+<center>
+<input type="button" name="e1" value="  Launch JavaScrypt  "
+    onclick="launchButton(); document.key.e1.disabled = true; document.key.e2.disabled=false;" />
+</center>
+
+<p>
+Alice and Bob have decided to use a "book code" for their
+encryption keys.  When they last met face to face, they agreed
+to obtain the keys for their encrypted messages from an
+innocuous science fiction novel,
+<a href="http://www.mathcs.sjsu.edu/faculty/rucker/" target="_blank">Rudy Rucker</a>'s
+<a href="http://www.amazon.com/exec/obidos/ASIN/1568582471/fourmilabwwwfour" target="Amazon_Fourmilab">
+<cite>The Hacker and the Ants</cite></a>.  Each time Alice or
+Bob sends a message, they pick a page of the book and line
+number on the page at random, then use whatever text appears on
+that line as the encryption key. The line, once used, is
+crossed out (sorry, Rudy!) so it will never inadvertently be
+reused.  This way, no two messages are ever sent with the same
+key, and each key, composed of an entire line of English text,
+is sufficiently long as to be difficult to guess.  (Book codes
+are far from optimal; later on we'll discuss more secure
+alternatives. At the moment, we're concerned with the mechanics
+of encryption and decryption, not details of key generation and
+distribution.)
+</p>
+
+<p>
+This time, by throwing dice or whatever, Alice has chosen line 28
+on page 172 of the book, which reads:
+</p>
+
+<blockquote>
+"<cite>serious hacker you don't let flames bother you.  Instead</cite>"
+</blockquote>
+This is the key for the message, so Alice types it into the
+<b>Key</b> box on the JavaScrypt page.  Press the button below
+to enter the key into the box.
+
+<center>
+<input type="button" name="e2" value="     Set Encryption Key     "
+    onclick="setKeyButton(); document.key.e2.disabled = true; document.key.e3.disabled=false;"
+    disabled="disabled" />
+</center>
+
+<p>
+Next, Alice enters the text of her message to Bob in the
+<b>Plain Text</b> box.  "Plain Text" refers to the original
+message before encryption into "Cipher Text", or recovered
+from the Cipher Text by decryption.  Press the button below
+to enter Alice's message into the <b>Plain Text</b> box.
+"BAGPIPE FJORD" is the meaningless code name for the
+operation she's giving Bob the go-ahead to proceed with;
+later on we'll see how to generate such names automatically.
+</p>
+
+<center>
+<input type="button" name="e3" value="     Paste Message into Plain Text Box     "
+    onclick="pastePlainButton(); document.key.e3.disabled = true; document.key.e4.disabled=false;"
+    disabled="disabled" />
+</center>
+
+<p>
+All that remains is to press the <b>Encrypt</b> button below the Plain Text
+box.  Please press the button below (for tedious technical reasons,
+<em>not</em> the one in the JavaScrypt page), to encrypt the Plain Text
+with the key.
+</p>
+
+<center>
+<input type="button" name="e4" value="     Press Encrypt Button    "
+    onclick="encryptButton(); document.key.e4.disabled = true; document.key.s1.disabled = document.key.d1.disabled = document.key.e1.disabled=false;"
+    disabled="disabled" />
+</center>
+
+<p>
+Alice can now copy the encrypted message from the <b>Cipher Text</b>
+box (pressing the
+<b><a href="javascript:if (sampleWindow) { sampleWindow.document.cipher.text.select();} ">Select</a></b>
+button below it selects the entire
+cipher text) and paste it into an E-mail message to Bob.  Before
+the cipher text, Alice will write the page and line number she used
+as the key.  If Eve intercepts the E-mail, this won't do her
+any good unless she's somehow learned which book Alice and Bob are
+using for their keys.
+</p>
+
+<h2><a name="Decrypt">Decrypt a Message</a></h2>
+
+<p>
+Now we change the scene from Alice's air conditioned office to Bob's
+more austere accommodations in the field.  After receiving Alice's message,
+including the page and line numbers at the start, he loads a copy of
+JavaScrypt into his own browser, as you can do by pressing the
+following button.
+If the button is disabled, you
+need to go back and work the
+<a href="#Encrypt">Encrypt a Message</a> example at the top
+of this page to create a message to decrypt.
+</p>
+
+<center>
+<input type="button" name="d1" value="  Launch JavaScrypt  "
+    onclick="launchButton(); document.key.d1.disabled = true; document.key.d2.disabled=false;"
+    disabled="disabled" />
+</center>
+
+<p>
+Bob begins by pasting Alice's message into the initially empty
+<b>Cipher Text</b> box.  Note that the message contains Alice's
+page and line notation, "<tt>172/28</tt>".  JavaScrypt ignores any
+text before the start of the encrypted message, so Bob hasn't bothered
+to remove the key annotation from Alice's message.
+</p>
+
+<center>
+<input type="button" name="d2" value="     Paste Encrypted Message into Cipher Text Box     "
+    onclick="pasteCipherButton(); document.key.d2.disabled = true; document.key.d3.disabled=false;"
+    disabled="disabled" />
+</center>
+
+<p>
+Bob then proceeds to dig out his copy of <cite>The Hacker and the Ants</cite>, turns
+to page 172 and counts down 28 lines to find the key, which he types into the
+<b>Key</b> box at the top of the JavaScrypt page.  Press the button below to
+enter the key.
+</p>
+
+<center>
+<input type="button" name="d3" value="     Set Decryption Key     "
+    onclick="setKeyButton(); document.key.d3.disabled = true; document.key.d4.disabled=false;"
+    disabled="disabled" />
+</center>
+
+<p>
+Now Bob need only press the <b>Decrypt</b> button below the
+<b>Cipher Text</b> box to decrypt the message.  Alice's original text
+will now appear in the <b>Plain Text</b> box.
+</p>
+
+<center>
+<input type="button" name="d4" value="     Press Decrypt Button    "
+    onclick="decryptButton(); document.key.d4.disabled = true; document.key.d1.disabled=false;"
+    disabled="disabled" />
+</center>
+
+<p>
+To recover the Plain Text,
+the decryption key must be identical to that used to encrypt the message.
+Try changing a single character of the key in the JavaScrypt page and
+pressing the <b>Decrypt</b> button below the <b>Cipher Text</b> box
+and see what you get for Plain Text.
+</p>
+
+<h2>Hiding a Message as English Text</h2>
+
+<p>
+Suppose that instead of E-mailing the message to Bob, Alice is
+forced to send it to the FAX machine in Bob's seedy hotel.  Sending what
+is obviously an encrypted message may cause hotel personnel to suspect Bob
+isn't the mild-mannered motorcycle parts salesman he purports to be, which
+information they might be tempted to peddle to folks Bob would rather
+not be aware of his actual profession.  But since few of the locals
+know much English, Bob's receiving messages in English may not
+arouse suspicion, even if the message reads like gibberish to
+an English speaker.
+</p>
+
+<p>
+In this situation, Alice might want to employ <em>steganography</em>,
+the art of secret writing, to disguise the nature of her message.
+Steganography is a large topic with roots in antiquity, ranging from
+invisible ink to microdots to the latest digital techniques of hiding
+messages as imperceptible noise in image and audio files.
+JavaScrypt's steganography is less sophisticated that the latter
+mechanisms, but may be adequate for less demanding situations.  Having
+first encrypted the message, Alice selects the Cipher Text and copies
+it to the clipboard, then launches <em>Stego!</em>, JavaScrypt's steganography page.  Press
+the button below to load this page.  If the button is disabled, you
+need to go back and work the
+<a href="#Encrypt">Encrypt a Message</a> example at the top
+of this page to obtain a message to hide.
+</p>
+
+<center>
+<input type="button" name="s1" value="  Launch Stego!  "
+    onclick="launchStego(); document.key.s1.disabled = true; document.key.s2.disabled = false;"
+    disabled="disabled" />
+</center>
+
+<p>
+Alice then pastes the encrypted Cipher Text into the eponymous box in
+the Stego! page, which you can accomplish by pressing the button below.
+</p>
+
+<center>
+<input type="button" name="s2" value="     Paste Encrypted Message into Cipher Text Box     "
+    onclick="pasteStegoCipherButton(); document.key.s2.disabled = true; document.key.s3.disabled = false;"
+    disabled="disabled" />
+</center>
+
+<p>
+Next, Alice presses the <b>Hide</b> button below the Cipher
+Text she just pasted into the box to encode it as a sequence of
+English words.  Press the button below to proceed with this
+step.
+</p>
+
+<center>
+<input type="button" name="s3" value="     Press Hide Button    "
+    onclick="hideButton(); document.key.s3.disabled = true; document.key.s1.disabled = document.key.u1.disabled = false;"
+    disabled="disabled" />
+</center>
+
+<p>
+Alice may then send the text in which the encrypted message has been
+hidden to Bob, adding to it an annotation which permits him to determine
+the page and line of the book to use as the key to decrypt it.
+</p>
+
+<h2>Recovering a Message Hidden in English Text</h2>
+
+<p>
+Upon receiving Alice's message, Bob gets it into his
+computer (if it arrived as a FAX, he'll have to type
+it in, but he needn't worry about the punctuation--only
+the words matter).  He then launches Stego!, as you may
+do with the following button.
+</p>
+
+<center>
+<input type="button" name="u1" value="  Launch Stego!  "
+    onclick="launchStego(); document.key.u1.disabled = true; document.key.u2.disabled=false;"
+    disabled="disabled" />
+</center>
+
+<p>
+Bob then pastes the text in which the message is hidden into the
+<b>Hidden Text</b> box.  Press the button below to accomplish
+this.
+</p>
+
+<center>
+<input type="button" name="u2" value="     Paste Hidden Message into Hidden Text Box     "
+    onclick="pasteStegoHiddenButton(); document.key.u2.disabled = true; document.key.u3.disabled=false;"
+    disabled="disabled" />
+</center>
+
+<p>
+Finally, Bob presses the <b>Seek</b> button below the <b>Hidden Text</b>
+box.  The encrypted message will be extracted and placed into the
+<b>Cipher text</b> box, whence Bob can copy it back to JavaScrypt
+to decode.
+</p>
+
+<center>
+<input type="button" name="u3" value="     Press Seek Button    "
+    onclick="seekButton(); document.key.u3.disabled = true; document.key.d1.disabled = document.key.u1.disabled = false;"
+    disabled="disabled" />
+</center>
+
+<p>
+You may now, if you wish, return to the
+<a href="#Decrypt">Decrypt a Message</a> example to verify
+the recovered text actually contains Alice's original message.
+</p>
+
+<h2>Generating One-Time Key Lists</h2>
+
+<p>
+Using a book for encryption keys as Alice and Bob did in the
+example above may be convenient, but has its disadvantages.  A
+mole who observes Alice looking up keys, or a covert break-in
+at Bob's hangout in the field looking for a well-thumbed book,
+might permit Eve to determine which book Alice and Bob were
+using, permitting her to read all of the traffic between them
+without raising any suspicion on their part; this could be a
+career-limiting situation, particularly for Bob.  Also, lines
+from books are usually short and contain many frequently-used
+words: in cryptographic lingo, their <em>entropy</em> is low,
+and rarely takes advantage of all the security provided by the
+underlying encryption scheme.
+</p>
+
+<p>
+If Alice and Bob have the opportunity to meet occasionally or
+can avail themselves of the services of a trusted courier, they
+may prefer to use <em>one-time key lists</em> to encrypt their
+messages. A one-time key list is simply a list of keys
+generated by a high-quality random or pseudorandom process. 
+Two copies of the list are made: one for Alice and one for
+Bob.  Each time Alice sends a message to Bob, she uses the next
+key on the list and crosses it out.  Bob, upon receiving the
+message, enters the next from his list and crosses it out.  No
+key is ever used twice, and unless the physical lists used by
+Alice and Bob are compromised, the keys will remain secure. 
+(If messages may be received out of order, they should be
+preceded by the number of the key on the list; this doesn't
+impair security in any way.  Alice and Bob would actually use
+two pairs of lists, one for sending messages from Alice to Bob,
+the other for messages from Bob to Alice.)
+</p>
+
+<p>
+JavaScrypt includes a <cite>Pass Phrase Generator</cite> which assists
+in the preparation of one-time key lists.  Start by launching the pass
+phrase generator in a browser window.
+</p>
+
+<center>
+<input type="button" name="p1" value="  Launch Pass Phrase Generator  "
+    onclick="launchPassPhrase(); document.key.p1.disabled = true; document.key.p2.disabled = false;" />
+</center>
+
+<p>
+The sequence of pass phrases generated is determined by a
+"seed", which can be specified either as text or a
+hexadecimal number.  Knowledge of the seed permits anybody with
+a copy of the pass phrase generator to reproduce the list of
+phrases, so security of the seed is essential. The pass phrase
+generator can automatically create pseudorandom seeds of
+sufficient length to provide reasonable security.  Press the
+button below to generate such a seed.
+</p>
+
+<center>
+<input type="button" name="p2" value="  Generate Seed  "
+    onclick="passPhraseGenerateSeed(); document.key.p2.disabled = true; document.key.p3.disabled = false;"
+    disabled="disabled" />
+</center>
+
+<p>
+Once the seed has been specified, a list of pass phrases may be
+generated simply by pressing the <b>Generate</b> button.  Press
+the button below to create a list.
+</p>
+
+<center>
+<input type="button" name="p3" value="  Generate Pass Phrases  "
+    onclick="passPhraseGeneratePhrases(); document.key.p3.disabled = true; document.key.p1.disabled = false;"
+    disabled="disabled" />
+</center>
+
+<p>
+Once a list of phrases is generated, you can use the <b>Select</b> button to
+select the text, then copy and paste it into the key list document.
+Note that once Alice and Bob have received their initial key lists,
+they can obtain additional secure keys without physically exchanging
+lists.  When her list of keys is nearing exhaustion, Alice need only
+generate a new list, then use one of her remaining keys to encrypt
+a message to Bob containing the seed she used for the new key
+list.  Bob can then enter the seed into his own copy of the pass phrase
+generator page and produce an identical copy of Alice's new key list.
+Alternatively, she could simply send the entire new list to Bob in
+an encrypted message, but just sending the seed makes for a shorter
+message.
+</p>
+
+<h2>Generating Operation Codenames</h2>
+
+<p>
+The pass phrase generator, suitably configured, is an excellent
+source of codenames for covert operations.  These names
+shouldn't have any meaning whatsoever relevant to the operation
+(this is guaranteed, since the pass phrase generator cannot
+read the minds of those plotting it). The process below will
+provide you with an endless list of suggestions.  Repeat it as
+many times as you need to find something with the right ring.
+Start by launching the pass phrase generator.
+</p>
+
+<center>
+<input type="button" name="o1" value="  Launch Pass Phrase Generator  "
+    onclick="launchPassPhrase(); document.key.o1.disabled = true; document.key.o2.disabled = false;" />
+</center>
+
+<p>
+As before, we wish to generate a pseudorandomly chosen set of candidate
+codenanes, so we use the <b>Generate Seed</b> button to create
+a new seed.
+</p>
+
+<center>
+<input type="button" name="o2" value="  Generate Seed  "
+    onclick="passPhraseGenerateSeed(); document.key.o2.disabled = true; document.key.o3.disabled = false;"
+    disabled="disabled" />
+</center>
+
+<p>
+With the seed specified, we can now proceed to generate a page full
+of potential codenames.  We will fill in the boxes below the list
+of phrases to produce traditional two-word codenames of
+all capital letters.  Press the button below to fill the box
+with candidate names.
+</p>
+
+<center>
+<input type="button" name="o3" value="  Generate Codenames  "
+    onclick="codeNameGeneratePhrases(); document.key.o3.disabled = true; document.key.o4.disabled = document.key.o1.disabled = false;"
+    disabled="disabled" />
+</center>
+
+<p>
+The best codenames come from a judicious combination of
+<a href="http://www.amazon.com/exec/obidos/ASIN/0716704633/fourmilabwwwfour" target="Amazon_Fourmilab">
+computer power and human reason</a>.  As Winston Churchill observed,
+</p>
+
+<blockquote>
+After all, the world is wide, and intelligent thought will readily supply
+an unlimited number of well-sounding names which do not suggest
+the character of the operation or disparage it in any way and
+do not enable some widow or mother to say that her son was
+killed in an operation called "Bunnyhug" or "Ballyhoo".
+    <p align="right" style="margin-top: 0pt">
+    <small>
+    --Winston S. Churchill,
+    <cite><a href="http://www.amazon.com/exec/obidos/tg/stores/series/-/351/paperback/ref=pd_serl_books/fourmilabwwwfour"
+    	target="Amazon_Fourmilab">The Second World War</a>:</cite>
+    <cite><a href="http://www.amazon.com/exec/obidos/ASIN/0395410592/fourmilabwwwfour"
+    	target="Amazon_Fourmilab">Volume V: Closing the Ring</a></cite>
+    </small>
+    </p>
+</blockquote>
+
+<p>
+If none of the generated codenames makes the cut, scroll up to the
+<b>Seed</b> box, press <b>New Seed</b> to generate another seed, and then
+press <b>Generate</b> to grow another crop of codenames--lather, rinse,
+repeat.  Or, just click the button below to generate as many
+as it takes to find one that suits.
+</p>
+
+<center>
+<input type="button" name="o4" value="  Generate More Codenames  "
+    onclick="codeNameReGeneratePhrases();"
+    disabled="disabled" />
+</center>
+
+</form>
+
+<h2>Onward from Here</h2>
+
+<p>
+This set of worked examples only scratches the surface of what
+you can do with JavaScrypt which, in itself, is but a simple
+and limited implementation of a cryptographic system.  To better understand
+JavaScrypt, please visit the pages below, all of which contain
+embedded documentation which explains the options available to
+you.
+</p>
+
+<ul>
+    <li><a href="index.html">JavaScrypt Home Page</a></li>
+    <li><a href="javascrypt.html">Encryption / Decryption Utility</a></li>
+    <li><a href="stego.html">Steganography (Hidden Writing) Utility</a></li>
+    <li><a href="pass_phrase.html">Pass Phrase Generator</a></li>
+    <li><a href="javascrypt.zip">Download JavaScrypt Source Code</a>
+    	(<a href="http://www.info-zip.org/" target="_blank">Zipped</a> archive)</li>
+</ul>
+
+<p>
+If you wish to dive deeper into the murky waters of cryptography,
+there are a multitude of references you can consult.  An excellent
+starting point, containing a bibliography which cites
+essential works for further exploration, is Ferguson and Schneier's
+<a href="http://www.amazon.com/exec/obidos/ASIN/0471223573/fourmilabwwwfour" target="Amazon_Fourmilab">
+<cite>Practical Cryptography</cite>.</a>
+</p>
+
+<p />
+<hr />
+<p />
+<table align="right">
+<tr><td align="center">
+    <a href="http://validator.w3.org/check?uri=referer"
+       target="FourmilabValidation"><img
+       src="http://www.fourmilab.ch/images/icons/valid-xhtml10.png"
+       alt="Valid XHTML 1.0" height="31" width="88"
+       border="0" /></a>
+</td></tr>
+</table>
+<address>
+by <a href="http://www.fourmilab.ch/">John Walker</a><br />
+December, 2005
+</address>
+<center>
+<em>This document is in the public domain.</em>
+</center>
+
+<h3><a href="index.html">JavaScrypt Home Page</a></h3>
+
+<h3><a href="http://www.fourmilab.ch/">Fourmilab Home Page</a></h3>
+
+</body>
+</html>

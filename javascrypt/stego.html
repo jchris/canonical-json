@@ -1,0 +1,517 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>Stego!  Text Steganography</title>
+<style type="text/css">
+    body {
+	margin-left: 15%;
+	margin-right: 10%;
+	background-color: #FFFFFF;
+	color: #000000;
+    }
+</style>
+
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<meta name="keywords" content="javascrypt, browser, encryption, stego, steganography, hidden, writing, javascript" />
+<meta name="description" content="Stego!  Text Steganography" />
+<meta name="author" content="John Walker" />
+<meta name="robots" content="index" />
+
+<!-- Import the external JavaScript modules -->
+<script type="text/javascript" language="JavaScript" src="lecuyer.js"></script>
+<script type="text/javascript" language="JavaScript" src="armour.js"></script>
+<script type="text/javascript" language="JavaScript" src="stegodict.js"></script>
+
+<script type="text/javascript" language="JavaScript">
+<!--
+
+    /*  Examine the message and determine which kind of ASCII
+    	armour it uses from the sentinel preceding the message.
+	We test for each of the sentinels and, if any are
+	found, decide based on the one found first in the
+	message (since, for example, the sentinel for
+	codegroup armour might appear in a Base64 message,
+	but only after the Base64 sentinel).  If none of
+	the sentinels are found, we decode using the armour
+	type specified by the checkboxes for encryption.
+	The return value is an integer which identifies the
+	armour type as follows:
+	
+	    	0   Codegroup
+		1   Hexadecimal
+		2   Base 64
+    */
+    
+    function determineArmourType(s) {
+    	var kt, pcg, phex, pb64, pmin;
+	
+	pcg = s.indexOf(codegroupSentinel);
+	phex = s.indexOf(hexSentinel);
+	pb64 = s.indexOf(base64sent);
+	if (pcg == -1) {
+	    pcg = s.length;
+	}
+	if (phex == -1) {
+	    phex = s.length;
+	}
+	if (pb64 == -1) {
+	    pb64 = s.length;
+	}
+	pmin = Math.min(pcg, Math.min(phex, pb64));
+	if (pmin < s.length) {
+	    if (pmin == pcg) {
+	    	kt = 0;
+	    } else if (pmin == phex) {
+	    	kt = 1;
+	    } else {
+	    	kt = 2;
+	    }
+	} else {
+    	    if (document.plain.encoding[0].checked) {
+    		kt = 0;
+	    } else if (document.plain.encoding[1].checked) {
+    		kt = 1;
+	    } else if (document.plain.encoding[2].checked) {
+    		kt = 2;
+	    }
+	}
+	return kt;
+    }
+    
+    //	Retrieve word given index in list of words of that length
+
+    function retrieveWord(length, index) {
+    	if ((length >= minw) && (length <= maxw) &&
+	    (index >= 0) && (index < nwords[length])) {
+	    return cwords[length].substring(length * index, length * (index + 1));
+	}
+	return "";
+    }
+    
+    //	Obtain word by index in complete dictionary
+    
+    function indexWord(index) {
+    	if ((index >= 0) && (index < twords)) {
+	    var j;
+
+	    for (j = minw; j <= maxw; j++) {
+		if (index < nwords[j]) {
+		    break;
+		}
+		index -= nwords[j];
+	    }
+	    return retrieveWord(j, index);
+	}
+	return "";
+    }
+    
+    /*	Edit an array of bytes (integers between 0 and 255) to
+    	a hexadecimal string.  */
+
+    function byteArrayToHex(byteArray) {
+	var result = "", i;
+	
+	for (i = 0; i < byteArray.length; i++) {
+	  result += ((byteArray[i] < 16) ? "0" : "") +
+	    	    byteArray[i].toString(16);
+    	}
+	return result;
+    }
+    
+    /*	Parse a sequence of hexadecimal digits into an array
+    	of bytes (integers between 0 and 255).  */
+	
+    function hexToByteArray(hexString) {
+	var byteArray = new Array(), i;
+
+	if (hexString.length % 2) {
+	    byteArray += "0";
+	}
+	if ((hexString.indexOf("0x") == 0) ||
+	    (hexString.indexOf("0X") == 0)) {
+	    hexString = hexString.substring(2);
+	}
+	
+	for (i = 0; i < hexString.length; i += 2) {
+	    byteArray[Math.floor(i / 2)] =
+	    	parseInt(hexString.slice(i, i + 2), 16);
+	}
+	return byteArray;
+    }
+    
+    //	Hide text as words
+
+    function Hide_text() {
+    	if (document.cipher.text.value.length == 0) {
+	    alert("No cipher text to hide!  Please enter or paste cipher text in the field above.");
+	    return;
+	}
+    	document.plain.text.value = "";
+	var ct = new Array(), kt, padded = false;
+	var purng = new LEcuyer((new Date()).getTime());
+	
+	kt = determineArmourType(document.cipher.text.value);
+    	if (kt == 0) {
+    	    ct = disarm_codegroup(document.cipher.text.value);
+	} else if (kt == 1) {
+    	    ct = disarm_hex(document.cipher.text.value);
+	} else if (kt == 2) {
+    	    ct = disarm_base64(document.cipher.text.value);
+	}
+
+    	/*  Cipher text should always be an even number of bytes.
+	    If it isn't, pad it with a zero and set a flag to indicate
+	    we've added a pad.  */
+	    
+	if (ct.length & 1) {
+	    ct[ct.length] = 0;
+	    padded = true;
+	}
+	
+	/*  Walk through cipher text two bytes at a time,
+	    assembling each pair into an index into our table
+	    of words.  Append each word to the hidden text.  */
+	    
+	var i, w, l = "", t = "";
+	var maxLine = document.cipher.linelen.value
+	    sl = 0, sc = 0, fpar = false,
+	    parl = purng.nextInt(9) + 3,
+	    puncture = document.cipher.punctuation.checked;
+	    
+	if (isNaN(maxLine) || (maxLine < 12)) {
+	    document.cipher.linelen.value = maxLine = 72;
+	}
+	
+	for (i = 0; i < ct.length; i += 2) {
+	    w = indexWord((ct[i] << 8) | ct[i + 1]).toLowerCase();
+	    if (puncture && (sl == 0)) {
+	    	w = w.substr(0, 1).toUpperCase() + w.substr(1, w.length);
+	    }
+	    
+	    /*	If this is the last word, put a period after it
+	    	unless we added a padding byte, in which case we
+		end with a bang to so indicate.  */
+	
+	    if (i == (ct.length - 2)) {
+	    	w += padded ? "!" : ".";
+    	    } else {	    
+	    	if (puncture) {
+		
+	    	    //  Regular word.  Generate random but plausible punctuation
+
+	    	    sl++;
+		    if (sl >= (purng.nextInt(9) + 3)) {
+			var p = purng.nextInt(15), pu;
+			pu = (p <= 13) ? "." : ((p == 14) ? "?" : "!");
+			w += pu + " ";
+			sl = 0;
+			sc++;
+			if (sc >= parl) {
+	    		    fpar = true;
+			    sc = 0;
+			}
+		    } else {
+			if (purng.nextInt(6) == 6) {
+		    	    w += ",";
+			}
+		    }
+		}
+	    }
+	    if ((l.length + w.length + 1) > maxLine) {
+	    	l = l.replace(/\s+$/, "");
+	    	t += l + "\n";
+		l = "";
+	    }
+	    if (l.length > 0) {
+	    	l += " ";
+	    }
+	    l += w;
+	    if (fpar) {
+	    	l = l.replace(/\s+$/, "");
+	    	t += l + "\n\n";
+		l = "";
+		fpar = false;
+		parl = purng.nextInt(8) + 2;
+	    }
+	}
+	t += l + "\n";
+	document.plain.text.value = t;
+	delete purng;
+    }
+    
+    //	Decode text from words
+    
+    function Seek_text() {
+    	if (document.plain.text.value.length == 0) {
+	    alert("No hidden text to decode!  Please enter or paste hidden text in the field above.");
+	    return;
+	}
+    	document.cipher.text.value = "";
+	var ct = new Array(), padded = false;
+    
+    	/*  Precompute table of cumulative words before those
+	    of a given length.  */
+    	var awords = new Array(), i, j;
+	j = 0;
+	for (i = minw; i <= maxw; i++) {
+	    awords[i] = j;
+	    j += nwords[i];
+	}
+	
+    	var t = document.plain.text.value, n = 0, v;
+	var wpat = /\W*(\w+)\w*/i;
+	while (wpat.test(t)) {
+	    //	Extract next word from text and determine its length
+	    t = t.replace(wpat, "");
+	    var w = RegExp.$1;
+	    var l = w.length;
+	    
+	    //	Look it up in the list of words of this length
+
+    	    w = w.substring(0, 1).toUpperCase() +
+	    	   w.substring(1, w.length);
+	    v = cwords[l].indexOf(w);
+	    if (v >= 0) {
+	    	v = (v / l) + awords[l];
+	    }
+    	    if (v == -1) {
+dump("Bogus word", w);
+    	    } else {
+		ct[n++] = (v >> 8) & 0xFF;
+		ct[n++] = v & 0xFF;
+    	    }
+	}
+	
+	if (t.indexOf("!") != -1) {
+	    padded = true;
+	    ct.pop();
+	    n -= 1;
+	}
+	
+    	if (document.plain.encoding[0].checked) {
+	    v = armour_codegroup(ct);
+	} else if (document.plain.encoding[1].checked) {
+    	    v = armour_hex(ct);
+	} else if (document.plain.encoding[2].checked) {
+	    base64addsent = document.plain.b64sent.checked;
+    	    v = armour_base64(ct);
+	}
+	document.cipher.text.value = v ;
+    }
+    
+    //	Sanity check dictionary length
+    
+    if (twords != (1 << 16)) {
+    	alert("Error!  Dictionary (stegodict.js) contains " +
+	      twords + " words; " + (1 << 16) + " words required.");
+    }
+
+// -->
+</script>
+</head>
+
+<body>
+
+<h1>Stego!  &nbsp; Text Steganography</h1>
+
+<hr style="background-color: rgb(192, 192, 192); color: #000000;" />
+
+<p>
+<em>Steganography</em> is the art and science of hidden writing.
+While an encryption program such as our
+companion <a href="javascrypt.html">JavaScrypt</a> page
+protects your message from being read by those not in possession
+of the key, sometimes you wish to obscure the very fact
+you're sending an encrypted message at all.  An encoded
+message just screams you're using encryption, which may
+attract unwanted attention to your activities even if
+snoopers cannot read the text of your messages.  Steganography
+attempts to conceal the presence of an encrypted message; over
+history a wide variety of techniques have been used: secret
+compartments in objects, invisible ink, microdots, grilles used
+to hide letters of a message among innocent text, and, in
+the digital age, embedding messages as imperceptible noise
+in images and audio files.
+</p>
+
+<p>
+This page implements a very rudimentary form of steganography; an
+encrypted message is converted to what, at first glance, looks
+like English text.  It <em>is</em>, in fact, English text, but
+complete
+<a href="http://www.fourmilab.ch/etexts/www/carroll/jabberwocky.html" target="_blank">nonsense</a>,
+consisting of words chosen from a
+dictionary of 65536 (2<sup>16</sup>) words, each encoding
+two bytes of the message in the position of the word in the dictionary.
+Punctuation and paragraph breaks are sprinkled through the
+text to make it look (marginally) more plausible.  Let's
+be frank: anybody who gives this text more than a cursory
+glance is going to immediately twig to the fact that
+something very odd is going on here (unless, perhaps, you
+give it a suitably postmodern title and cast it as a paper
+published in
+<cite><a href="http://www.nyu.edu/pubs/socialtext/" target="_blank">Social Text</a></cite>).
+To make things less obvious, you may wish to embed the text
+generated by this page into a long document, having beforehand
+established a convention with your correspondent to permit
+them to locate it.
+</p>
+
+<form name="cipher" action="#" onsubmit="return false;">
+
+<h3>Cipher Text</h3>
+
+<p>
+To convert an encrypted message to English text, paste the cipher text
+generated by
+<a href="javascrypt.html">JavaScrypt</a> into the box below, then
+press the <b>Hide</b> button.  You can control the
+approximate length of lines of text by setting the <b>Line length</b>,
+and suppress the interspersing of punctuation and paragraph
+breaks by unchecking <b>Punctuation</b>.  The cipher text may be in any
+of the encodings supported by JavaScrypt.  If the cipher text lacks the
+sentinels normally included by JavaScrypt (for example, if you're
+using this page to convert a
+<a href="http://www.fourmilab.ch/webtools/base64/" target="_blank">Base64</a> file generated
+by another program to text), you <em>must</em> specify the
+encoding by checking the corresponding button in the
+<b>Encoding</b> section below the <b>Hidden Text</b> box.
+</p>
+
+<p align="center">
+<textarea name="text" rows="16" cols="80"
+    	  style="background-color: rgb(255, 200, 200); color: #000000;">
+</textarea>
+<br />
+<input type="button" name="hide" value=" Hide " onclick="Hide_text();" />
+&nbsp;
+<input type="button" value=" Clear " onclick="document.cipher.text.value = '';" />
+&nbsp;
+<input type="button" value=" Select " onclick="document.cipher.text.select();" />
+&nbsp;
+Line&nbsp;length:&nbsp;<input type="text" name="linelen" size="4" maxlength="6" value="72" />
+&nbsp;
+<input type="checkbox" checked="checked" name="punctuation" />&nbsp;Punctuation
+</p>
+</form>
+
+<form name="plain" action="#" onsubmit="return false;">
+<h3>Hidden Text</h3>
+
+<p>
+To decode a message hidden as text, paste the hidden message into
+the box below.  While blank lines and punctuation of all kinds are
+ignored, as is the case of letters, there must be no extraneous words
+in the text.  Press the <b>Seek</b> button to decode the
+message into JavaScrypt-compatible cipher text in the box
+above.  The cipher text will use the encoding specified by
+the <b>Encoding</b> buttons.  If
+<a href="http://www.fourmilab.ch/webtools/base64/" target="_blank">Base64</a>
+encoding is requested and the <b>Sentinel</b> box is
+unchecked, the usual JavaScrypt cipher text start and end
+sentinels will be omitted; this option permits creating
+Base64-encoded documents suitable for use with other programs.
+</p>
+
+<p align="center">
+<textarea name="text" rows="16" cols="80"
+    	  style="background-color: rgb(255, 165, 0); color: #000000;">
+</textarea>
+<br />
+<input type="button" name="seek" value=" Seek " onclick="Seek_text();" />
+&nbsp;
+<input type="button" value=" Clear " onclick="document.plain.text.value = '';" />
+&nbsp;
+<input type="button" value=" Select " onclick="document.plain.text.select();" />
+<br />
+<b>Encoding:</b>&nbsp;
+<input type="radio" checked="checked" name="encoding" />&nbsp;Codegroup
+&nbsp;
+<input type="radio" name="encoding" />&nbsp;Hexadecimal
+&nbsp;
+<input type="radio" name="encoding" />&nbsp;Base&nbsp;64&nbsp;<input
+       type="checkbox" checked="checked" name="b64sent" />&nbsp;Sentinel?
+</p>
+</form>
+
+<!-- +FULL -->
+<!--
+                      <h3>Debugging Console</h3>
+
+<form name="debug" action="#" onsubmit="return false;">
+
+<center>
+<textarea name="log" rows="6" cols="80">
+</textarea>
+<br />
+<input type="button" value=" Clear " onclick="document.debug.log.value = '';" />
+&nbsp;
+<input type="button" value=" Test " onclick="TestSomething();" />
+</center>
+</form>
+
+<h4><a href="javascript:">JavaScript Console</a></h4>
+-->
+
+<script type="text/javascript" language="JavaScript">
+<!--    
+
+/*  Dump one or more (variable_name, value) pairs given as arguments
+    to the function.  */
+
+function dump()
+{
+    var t = "", i;
+    
+    for (i = 0; i < arguments.length; i += 2) {
+    	if (t.length > 0) {
+	    t += ", ";
+	}
+	t += arguments[i] + " = " + arguments[i + 1];
+    }
+    document.debug.log.value += t + "\n";
+}
+-->
+</script>
+
+<!-- -FULL -->
+
+<h3><a href="index.html">JavaScrypt</a></h3>
+
+<ul>
+    <li><a href="index.html">JavaScrypt Home Page</a></li>
+    <li><a href="example.html">JavaScrypt Tutorial</a></li>
+    <li><a href="javascrypt.html">Encryption/Decryption Utility</a> &nbsp;
+       (<a href="jscrypt.html">lean version</a>)</li>
+    <li><a href="pass_phrase.html">Pass Phrase Generator</a></li>
+    <li><a href="javascrypt.zip">Download JavaScrypt Source Code</a>
+       (<a href="http://www.info-zip.org/" target="_blank">Zipped</a> archive)</li>
+</ul>
+
+<h3><a href="http://www.fourmilab.ch/">Fourmilab Home Page</a></h3>
+
+<p />
+<hr />
+<p />
+<table align="right">
+<tr><td align="center">
+    <a href="http://validator.w3.org/check?uri=referer"
+       target="FourmilabValidation"><img
+       src="http://www.fourmilab.ch/images/icons/valid-xhtml10.png"
+       alt="Valid XHTML 1.0" height="31" width="88"
+       border="0" /></a>
+</td></tr>
+</table>
+<address>
+by <a href="http://www.fourmilab.ch/">John Walker</a><br />
+December, 2005
+</address>
+<center>
+<em>This document is in the public domain.<br />
+Use of this program to generate postmodern poetry or sociology theses
+is strictly forbidden.</em>
+</center>
+
+</body>
+</html>

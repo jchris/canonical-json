@@ -1,0 +1,441 @@
+<html>
+<head>
+<title>GPL JavaScript Public Key Encryption Demo</title>
+</head>
+
+<body>
+<script src="crypto.js"></script>
+<script language="JavaScript"><!--
+/* The following functions are (c) 2000 by John M Hanna and are
+ * released under the terms of the Gnu Public License.
+ * You must freely redistribute them with their source -- see the
+ * GPL for details.
+ *  -- Latest version found at http://sourceforge.net/projects/shop-js
+ */
+
+// seed the random number generator with entropy in s
+function seed(s) {
+ rSeed=[];
+ var n=0,nn=0;
+ while(n < s.length) {
+  while(n<s.length && s.charCodeAt(n)<=32) n++;
+  if(n < s.length) rSeed[nn]=parseInt("0x"+s.substr(n,2));
+  n+=3; nn++;
+ }
+
+ var x, y, t;
+ Rs=[];
+ Rsl=rSeed.length;
+ Sr= r(256)
+ Rbits=0
+
+ if(Rs.lengh==0) {for (x=0; x<256; x++) Rs[x]=x;}
+ y=0
+ for (x=0; x<256; x++) {
+  y=(rSeed[x] + s[x] + y) % 256
+  t=s[x]; s[x]=s[y]; s[y]=t
+ }
+ Rx=Ry=0;
+ alert("Random seed updated. Seed size is: "+Rsl);
+}
+// generate a random number 0 .. 255
+// uses entropy from seed
+function rc() {
+  // this first bit is basically RC4
+  Rx=++Rx & 255;
+  Ry=( Rs[Rx] + Ry) & 255;
+  var t=Rs[Rx]; Rs[Rx]=Rs[Ry]; Rs[Ry]=t;
+  Sr^= Rs[(Rs[Rx] + Rs[Ry]) & 255];
+
+  // xor with javascripts rand, just in case there's good entropy there
+  Sr^= r(256);
+
+  Sr^= ror(rSeed[r(Rsl)],r(8));
+  Sr^= ror(rSeed[r(Rsl)],r(8));
+  return Sr;
+}
+// javascript's random 0 .. n
+function r(n) {return  Math.floor(Math.random()*n);}
+// rotate right
+//function ror(a,b) {return b?((a<<b)|(a>>(8-b))&255):a;}
+// random number between 0 .. n -- based on repeated calls to rc
+function rand(n) {
+ if(n==2) {
+  if(! Rbits) {
+   Rbits=8;
+   Rbits2=rc(256);
+  }
+  Rbits--;
+  var r=Rbits2 & 1;
+  Rbits2>>=1;
+  return r;
+ }
+ var m=1, r=0;
+ while (n>m && m > 0) {
+  m<<=8; r=(r<<8) |rc();
+ }
+ if(r<0) r ^= 0x80000000;
+ return r % n;
+}
+
+tstval=[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+
+// functions for generating keys-----------------------------
+function bgcd(uu,vv) { // return greatest common divisor
+ // algorythm from http://algo.inria.fr/banderier/Seminar/Vallee/index.html
+ var d, t, v=vv.concat(), u=uu.concat()
+ for(;;) {
+  d=bsub(v,u)
+  if(beq(d,[0])) return u
+  if(d.length) {
+   while((d[0] & 1) ==0)
+    d=brshift(d).a // v=(v-u)/2^val2(v-u)
+   v=d
+  } else {
+   t=v; v=u; u=t // swap u and v
+  }
+ }
+}
+
+function rnum(bits) {
+ var n,b=1,c=0
+ var a=[]
+ if(bits==0) bits=1
+ for(n=bits; n>0; n--) {
+  if(rand(2)) {
+   a[c]|=b
+  }
+  b<<=1
+  if(b==bx2) {
+   b=1; c++
+  }
+ }
+ return a
+}
+
+// function to generate keys
+function genkey(bits,f) {
+ timerStart()
+ bits=parseInt(bits)*8
+ var q,p,p1q1,n,factorMe,d,e,r
+ var c,cc,ccc,pq
+ q=mpp(bits); p=mpp(bits)
+ f.p.value=p; f.q.value=q
+ p1q1=bmul(bsub(p,[1]),bsub(q,[1]))
+ for(c=5; c<Primes.length; c++) {
+  e=[Primes[c]]
+  d=modinverse(e,p1q1)
+  if(d.length != 1 || d[0]!=0) break
+ }
+ f.d.value=d; f.e.value=e; f.pq.value=(pq=bmul(p,q))
+ // test
+ timerStop()
+ c=bmod(tstval,pq)
+ cc=bmodexp(c,e,pq)
+ timerStart()
+ //cc1=bmodexp(cc,d,pq)
+ ccc=crt_RSA(cc,d,p,q)
+ timerStop()
+ return
+}
+function timerStart() {
+ startTime=new Date();
+}
+function timerStop() {
+ var endTime=new Date();
+ document.t.howLong2.value=document.t.howLong.value
+ document.t.howLong.value=(endTime.getTime()-startTime.getTime())/1000.0;
+} 
+function parseArray(a) {
+ a=a.split(",")
+ for(var n=0; n<a.length; n++) {
+  a[n]=parseInt(a[n])
+ }
+ return a
+}
+
+function enc(f) {
+ timerStart()
+ f.text.value=rsaEncode(parseArray(f.e.value),parseArray(f.pq.value),f.text.value)
+ timerStop()
+}
+function dec(f) {
+ timerStart()
+ f.text.value=rsaDecode([parseArray(f.d.value),
+  parseArray(f.p.value),
+  parseArray(f.q.value)],
+  f.text.value)
+ timerStop()
+}
+
+
+Primes=[3, 5, 7, 11, 13, 17, 19,
+	23, 29, 31, 37, 41, 43, 47, 53,
+	59, 61, 67, 71, 73, 79, 83, 89,
+	97, 101, 103, 107, 109, 113, 127, 131,
+	137, 139, 149, 151, 157, 163, 167, 173,
+	179, 181, 191, 193, 197, 199, 211, 223,
+	227, 229, 233, 239, 241, 251, 257, 263,
+	269, 271, 277, 281, 283, 293, 307, 311,
+	313, 317, 331, 337, 347, 349, 353, 359,
+	367, 373, 379, 383, 389, 397, 401, 409,
+	419, 421, 431, 433, 439, 443, 449, 457,
+	461, 463, 467, 479, 487, 491, 499, 503,
+	509, 521, 523, 541, 547, 557, 563, 569,
+	571, 577, 587, 593, 599, 601, 607, 613,
+	617, 619, 631, 641, 643, 647, 653, 659,
+	661, 673, 677, 683, 691, 701, 709, 719,
+	727, 733, 739, 743, 751, 757, 761, 769,
+	773, 787, 797, 809, 811, 821, 823, 827,
+	829, 839, 853, 857, 859, 863, 877, 881,
+	883, 887, 907, 911, 919, 929, 937, 941,
+	947, 953, 967, 971, 977, 983, 991, 997,
+	1009, 1013, 1019, 1021]
+
+
+sieveSize=4000
+sieve0=-1* sieveSize
+sieve=[]
+
+lastPrime=0
+function nextPrime(p) { // returns the next prime > p
+ var n
+ if(p == Primes[lastPrime] && lastPrime <Primes.length-1) {
+  return Primes[++lastPrime]
+ }
+ if(p<Primes[Primes.length-1]) {
+  for(n=Primes.length-2; n>0; n--) {
+   if(Primes[n] <= p) {
+    lastPrime=n+1
+    return Primes[n+1]
+   }
+  }
+ }
+ // use sieve and find the next one
+ var pp,m
+ // start with p
+ p++; if((p & 1)==0) p++
+ for(;;) {
+  // new sieve if p is outside of this sieve's range
+  if(p-sieve0 > sieveSize || p < sieve0) {
+   // start new sieve
+   for(n=sieveSize-1; n>=0; n--) sieve[n]=0
+   sieve0=p
+   primes=Primes.concat()
+  } 
+
+  // next p if sieve hit
+  if(sieve[p-sieve0]==0) { // sieve miss
+
+   // update sieve if p divisable
+
+   // find a prime divisor
+   for(n=0; n<primes.length; n++) {
+    if((pp=primes[n]) && p % pp ==0) {
+     for(m=p-sieve0; m<sieveSize; m+=pp) sieve[m]=pp
+     p+=2;
+     primes[n]=0
+     break
+    }
+   }
+   if(n >= primes.length) {
+    // possible prime
+    return p
+   }
+  } else {
+    p+=2;
+  }
+ }
+
+}
+function divisable(n,max) { //return a factor if n is divisable by a prime less than max, else return 0
+ if((n[0] & 1) == 0) return 2
+ for(c=0; c<Primes.length; c++) {
+  if(Primes[c] >= max) return 0
+  if(simplemod(n,Primes[c])==0)
+   return Primes[c]
+ }
+ c=Primes[Primes.length-1]
+ for(;;) {
+  c=nextPrime(c)
+  if(c >= max) return 0
+  if(simplemod(n,c)==0)
+   return c
+ }
+}
+function bPowOf2(pow) { // return a bigint
+ var r=[], n, m=Math.floor(pow/bs)
+ for(n=m-1; n>=0; n--) r[n]=0;
+ r[m]= 1<<(pow % bs)
+ return r
+}
+function mpp(bits) { //returns a Maurer Provable Prime, see HAC chap 4 (c) CRC press
+ if(bits < 10) return [Primes[rand(Primes.length)]]
+ if(bits <=20) return [nextPrime(rand(1<<bits))]
+ var c=10, m=20, B=bits*bits/c, r, q, I, R, n, a, b, d, R2, nMinus1
+ if(bits > m*2) {
+  for(;;) {
+   r=Math.pow(2,Math.random()-1)
+   if(bits - r * bits > m) break
+  }
+ } else {
+  r=0.5
+ }
+ q=mpp(Math.floor(r*bits)+1)
+ I=bPowOf2(bits-2)
+ I=bdiv(I,q).q
+ Il=I.length
+ for(;;) {
+  // generate R => I < R < 2I
+  R=[]; for(n=0; n<Il; n++) R[n]=rand(bx2);
+  R[Il-1] %= I[Il-1]; R=bmod(R,I);
+  if(! R[0]) R[0]|=1 // must be greater or equal to 1
+  R=badd(R,I)
+  n=blshift(bmul(R,q),1) // 2Rq+1
+  n[0]|=1
+  if(!divisable(n,B)) {
+   a=rnum(bits-1)
+   a[0]|=2 // must be greater than 2
+   nMinus1=bsub(n,[1])
+   var x=bmodexp(a,nMinus1,n)
+   if(beq(x,[1])) {
+    R2=blshift(R,1)
+    b=bsub(bmodexp(a,R2,n),[1])
+    d=bgcd(b,n)
+    if(beq(d,[1])) return n
+   }
+  }
+ }
+}
+
+
+
+// --></script>
+<h2>JAVAScript Public Key Encryption Demo</h2>
+Here's everything you need to do secure, public key, browser-based
+transactions. The code works seemlessly with the shopping cart system
+and is about as optimized as I can make it. I may work to do something
+fancy with generating random numbers with higher entropy, or adding
+a passphrase to protect the private key. 
+<p>
+First you need to generate a key pair. (Actually, it's four numbers: p, q, d,
+and e: p * q and e make the "public key" and p, q, and d make the "private
+key.") This is the
+slowest part. Pick how large a key you want. Larger keys are more secure,
+but take longer to generate, and somewhat longer to use (especially decrypting
+the orders). 512 bit key modulos (32 byte keys, ie p and q are 256 bits each)
+are still considered somewhat secure. My browser took about 3 minutes
+to generate a key of this size on my p2-450. Try a smaller one first, like 8 bytes and
+square that time twice to see how long it might take for you.<p>
+
+Encrypting the orders takes very little time, maybe a second or two,
+but those decrypting will notice a definate lag (7 seconds for me).
+<p>
+Note that many browsers require you to NOT cancel the script after it is
+taking a while to generate the keys. I've tested this on InternetExplorer 5 (win).
+If you find it works/doesn't work with another browser, let me know. I've been
+told that Netscape is much slower than Microsoft for this type of thing.<p>
+<form name=t>
+Random seed: <textarea name=rseed rows=3 cols=20
+onChange="seed(this.value)"></textarea>
+<br>
+<a href="www.random.org">Random.org</a> will provide us with a random seed
+by clicking <a href="http://www.random.org/cgi-bin/randbyte?nbytes=1024&format=hex" target="_blank">here</a>.
+Ctrl-a and Ctrl-c to copy the text, then paste it above.
+<p>
+key bytes: <input type=text name=keylen size=2 value=8>
+<input type=button value=GenerateKey onClick="genkey(document.t.keylen.value,document.t)"><br>
+prime factor p: <input type=text name=p size=10>
+prime factor q: <input type=text name=q size=10><br>
+(Note: these are used to build your key values.)<br>
+Public Modulo (p*q): <input type=text name=pq size=40><br>
+Private exponent (d): <input type=text name=d size=40 value=""><br>
+Public exponent (e): <input type=text name=e size=40 value=""> <br>
+text:
+<textarea name=text rows=8, cols=40>your secret text goes here</textarea>
+<input type=button value="Encrypt" onClick="enc(document.t)">
+<input type=button value="Decrypt" onClick="dec(document.t)">
+<br>
+Decrypting takes <input type=text name=howLong size=4> seconds<br>
+This took <input type=text name="howLong2" size=4> seconds<br>
+</form>
+
+<h3>How to use these:</h3>
+This is free software. I make absolutely NO WARRANTY whatsoever that this
+software does anything. See the
+<a href="http://www.gnu.org/copyleft/gpl.html">GPL</a> for details.<p>
+Generate a key pair. For example, when I did I got:<ul>
+<li>p: 40632295,2191 (private)
+<li>q: 122927507,2595 (private)
+<li>d: 119141457,185046352,2676254 (private)
+<li>p*q: 148299941,57683965,5687041 (public)
+<li>e: 17 (public)</ul>
+<i>Note: this example is trivially insecure</i><p>
+Put a copy of crypto.js on your hard drive and on the server. Then
+add the following to your public script on your server:<br>
+<textarea rows=5 cols=70>
+<script>
+function encrypt() {
+ document.form.text.value=rsaEncode([17],
+  [148299941,57683965,5687041],document.form.text.value)
+}
+</script>
+</textarea><P>
+And put the following in your private script (probably on your local hard
+disk -- not on the internet -- if your private key is found this whole
+thing is useless.)<br>
+<textarea rows=7 cols=70>
+<script>
+function decrypt() {
+ // key = [ [d], [p], [q] ];
+ var key=[[119141457,185046352,2676254],[40632295,2191],[122927507,2595]];
+ document.form.text.value=rsaDecode(key, document.form.text.value);
+}
+</script>
+</textarea>
+<p>Ok, so you might want to do something more interesting than just put
+the data into document.form.text.value (this assumes you have a &lt;form name="form"&gt;
+in your document, by the way).
+
+<p>Enjoy!
+<p>John
+<p>
+<h3>Change log</h3>
+<table border=1>
+<tr><td>7/12/02</td><td>
+I found a bug in the b2t function (crypto.js) which made odd key sizes fail. It's fixed
+I also changed the crypto.js rc4 to be more secure (especially with short keys)
+and to be compatible with the decryptor.py python script. Encryptions made
+with this version ARE NOT COMPATIBLE with encryptions made the old way.
+</td></tr>
+<tr><td>4/25/01</td><td>
+I just found out about random.org and changed the seed function to take
+advantage of it.
+</td></tr>
+<tr><td>3/19/01</td><td>
+Just for kicks I thought I'd try to generate a 960 bit (60 byte) key pair.
+On my p2-450 it took slightly more than 10 minutes to generate the keys,
+and decryption took 33 seconds. I'm happy.
+</td></tr>
+<tr><td>3/19/01</td><td>added the entropy pool to the random number generator. This only
+slowed key generation by < 10%, so I think it's worth keeping.<br>
+</td></tr>
+<tr><td>
+3/11/01</td><td>replaced decode's mod-exp call with optimized Chinese Remainder
+Therom version; decodes are roughly 2x faster. NOTE: this means calling
+interface for rsaDecode is changed.<br>
+</td></tr>
+<tr><td>3/10/01</td><td>replaced general slow radix function with simple optimized
+versions for b2t, t2b, textToBase64 and base64ToText; this greately
+accelerated encrypting longer strings<br>
+</td></tr>
+<tr><td>3/10/01</td><td>rewrote session key generation (again)<br>
+</td></tr>
+<tr><td>1/25/01</td><td>concluding massive rewrite including Maurer's provable primes and
+Barrett's modular reduction; increased speed by 10 - 100 times<br>
+</td></tr>
+<tr><td>1/3/01</td><td>added sieve to prime number locator -- increasing speed lots!<br>
+</td></tr></table>
+
+</body>
+</html>

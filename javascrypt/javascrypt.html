@@ -1,0 +1,273 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>JavaScrypt Encryption and Decryption</title>
+<style type="text/css">
+    body {
+        margin-left: 15%;
+        margin-right: 10%;
+	background-color: #FFFFFF;
+	color: #000000;
+    }
+</style>
+
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<meta name="keywords" content="javascrypt, browser, encryption, aes, advanced, system, javascript" />
+<meta name="description" content="JavaScrypt Encryption and Decryption" />
+<meta name="author" content="John Walker" />
+<meta name="robots" content="index" />
+
+<!-- Import the external JavaScript modules -->
+<script language="JavaScript" type="text/javascript" src="aes.js"></script>
+<script language="JavaScript" type="text/javascript" src="entropy.js"></script>
+<script language="JavaScript" type="text/javascript" src="aesprng.js"></script>
+<script language="JavaScript" type="text/javascript" src="lecuyer.js"></script>
+<script language="JavaScript" type="text/javascript" src="md5.js"></script>
+<script language="JavaScript" type="text/javascript" src="armour.js"></script>
+<script language="JavaScript" type="text/javascript" src="utf-8.js"></script>
+<script language="JavaScript" type="text/javascript" src="jscrypt.js"></script>
+
+<!-- +FULL -->
+<script type="text/javascript" language="JavaScript">
+<!-- 
+    /*	Test jig for code activated by the "Test" button when the
+    	debugging console is activated.  */
+
+    function TestSomething() {
+    }
+
+// -->
+</script>
+<!-- -FULL -->
+
+<script type="text/javascript" language="JavaScript">
+<!-- 
+
+    //	Our onLoad handler kicks off the collection of entropy
+
+    function nowLoaded() {    
+    	ce();	    	    	    	// Add time we got here to entropy
+    	mouseMotionEntropy(60);   	// Initialise collection of mouse motion entropy
+    }
+// -->
+</script>
+
+</head>
+
+<body onload="nowLoaded();">
+
+<h1>JavaScrypt Encryption and Decryption</h1>
+
+<hr style="background-color: rgb(192, 192, 192); color: #000000;" />
+
+<!-- +FULL -->
+<p>
+This page allows you to encrypt text with a specified key,
+yielding an encoded message, and decode encrypted messages,
+recovering the original text.  All encryption is performed
+entirely within your Web browser using the JavaScript language
+(which, obviously, must be enabled in order to use this page). 
+<b>Nothing is sent to any Web site when you encrypt or decrypt
+a message!</b> You can, if you wish, download a copy of this
+page and the JavaScript programs it includes to your own
+computer and use it even when you're not connected to the
+Internet. (For this purpose, you may prefer the <a
+href="jscrypt.html">monolithic "lean" version</a> with
+documentation removed and all JavaScript programs embedded into
+a single Web page.)
+</p>
+<!-- -FULL -->
+
+<form name="key" action="#" onsubmit="return false;">
+                     <h3>Key</h3>
+<!-- +FULL -->
+<p>     
+Enter the key to be used to encrypt or decrypt the data in the
+field below.  If <b>Text</b> is checked, the key may consist of any
+sequence of up to 1024 characters; for maximum security, if the
+key consists of a sequence of words (many people find it easier
+to remember a phrase instead of a random sequence of
+characters), it should be at least 60 characters in length.  If
+<b>Hexadecimal</b> is checked, the key is given as a sequence of
+hexadecimal digits: <tt>0</tt>-<tt>9</tt>,
+<tt>a</tt>-<tt>f</tt> (or <tt>A</tt>-<tt>F</tt>), which should
+be 32 bytes (64 hexadecimal digits) in length for maximum
+security.  The <b>Generate</b> button may be used to create a key in
+either text or hexadecimal format (depending on which button is
+checked) sufficiently long to provide maximum security using a
+high quality pseudorandom number generator seeded from the time
+the page was loaded, the time you pressed the <b>Generate</b>
+button, and the time of keystrokes and various other events
+since the page was loaded.  You can generate lists of keys
+suitable for exchanging with correspondents using our companion
+<a href="pass_phrase.html">Pass Phrase Generator</a>
+page.
+</p>
+
+<!-- -FULL -->
+
+<p align="center">
+<input type="text" name="text" size="80" maxlength="1024"
+       style="background-color: rgb(255, 255, 200); color: #000000; font-family: monospace;"
+       onfocus="ce();" onblur="ce();" onkeydown="ce();" />
+<br />
+<input type="radio" checked="checked" name="keytype" />&nbsp;Text
+&nbsp;
+<input type="radio" name="keytype" />&nbsp;Hexadecimal
+&nbsp;
+<input type="button" value=" Generate " onclick="Generate_key();" />
+&nbsp;
+<input type="button" value=" Clear " onclick="document.key.text.value = '';" />
+&nbsp;
+<input type="button" value=" Select " onclick="document.key.text.select();" />
+</p>
+</form>
+
+<form name="plain" action="#" onsubmit="return false;">
+                     <h3>Plain Text</h3>
+		     
+<!-- +FULL -->
+<p>
+Enter or paste the text to be encrypted into the following box.  If
+you wish to encrypt a binary file (for example, an image or an
+audio file), use a utility like
+<a href="http://www.fourmilab.ch/webtools/base64/" target="_blank">Base64</a>
+to encode it as text before encryption.  Press the
+<b>Encrypt</b> button to encrypt the text with the above key; the
+encrypted text will be placed in the <b>Cipher Text</b> box, encoded
+as text with the <b>Encoding</b> you've selected.  If you prefer to
+camouflage your message as (nonsense) English text, first
+encrypt it in any of the encodings, then select, copy, and
+paste the text into our
+<a href="stego.html">Steganography</a> (hidden writing)
+page.
+</p>
+<!-- -FULL -->
+
+<p align="center">
+<textarea name="text" rows="16" cols="80"
+    	  style="background-color: rgb(200, 255, 200); color: #000000;"
+          onfocus="ce();" onblur="ce();" onkeydown="ce();">
+</textarea>
+<br />
+<input type="button" name="encrypt" value=" Encrypt " onclick="Encrypt_text();" />
+&nbsp;
+<input type="button" value=" Clear " onclick="document.plain.text.value = '';" />
+&nbsp;
+<input type="button" value=" Select " onclick="document.plain.text.select();" />
+<br />
+<b>Encoding:</b>&nbsp;
+<input type="radio" checked="checked" name="encoding" />&nbsp;Codegroup
+&nbsp;
+<input type="radio" name="encoding" />&nbsp;Hexadecimal
+&nbsp;
+<input type="radio" name="encoding" />&nbsp;Base&nbsp;64
+</p>
+</form>
+
+<form name="cipher" action="#" onsubmit="return false;">
+                     <h3>Cipher Text</h3>
+		     
+<!-- +FULL -->
+<p>
+To decrypt an enciphered message, paste it in the box below,
+enter the key with which it was encrypted in the <b>Key</b> box at
+the top, and press the <b>Decrypt</b> button.  The decrypted text
+will be placed in the <b>Plain Text</b> box above.  Text before and
+after the encrypted message is ignored, and the encoding used
+by the message is determined automatically.  You can decrypt
+only one message at a time; if more than one encrypted message
+is pasted into the box below, only the first will be decrypted.
+</p>
+<!-- -FULL -->
+
+<p align="center">
+<textarea name="text" rows="16" cols="80"
+    	  style="background-color: rgb(255, 200, 200); color: #000000;"
+          onfocus="ce();" onblur="ce();" onkeydown="ce();">
+</textarea>
+<br />
+<input type="button" name="decrypt" value=" Decrypt " onclick="Decrypt_text();" />
+&nbsp;
+<input type="button" value=" Clear " onclick="document.cipher.text.value = '';" />
+&nbsp;
+<input type="button" value=" Select " onclick="document.cipher.text.select();" />
+</p>
+</form>
+
+<!-- +FULL -->
+<!--
+                      <h3>Debugging Console</h3>
+
+<form name="debug" action="#" onsubmit="return false;">
+
+<center>
+<textarea name="log" rows="6" cols="80">
+</textarea>
+<br />
+<input type="button" value=" Clear " onclick="document.debug.log.value = '';" />
+&nbsp;
+<input type="button" value=" Test " onclick="TestSomething();" />
+</center>
+</form>
+
+<h4><a href="javascript:">JavaScript Console</a></h4>
+-->
+<script type="text/javascript" language="JavaScript">
+<!--
+/*  Dump one or more (variable_name, value) pairs given as arguments
+    to the function.  */
+
+function dump()
+{
+    var t = "", i;
+    
+    for (i = 0; i < arguments.length; i += 2) {
+    	if (t.length > 0) {
+	    t += ", ";
+	}
+	t += arguments[i] + " = " + arguments[i + 1];
+    }
+    document.debug.log.value += t + "\n";
+}
+-->
+</script>
+
+<h3><a href="index.html">JavaScrypt</a></h3>
+
+<ul>
+    <li><a href="index.html">JavaScrypt Home Page</a></li>
+    <li><a href="example.html">JavaScrypt Tutorial</a></li>
+    <li><a href="jscrypt.html">"Lean" Version of this Program</a></li>
+    <li><a href="stego.html">Steganography (Hidden Writing) Utility</a></li>
+    <li><a href="pass_phrase.html">Pass Phrase Generator</a></li>
+    <li><a href="javascrypt.zip">Download JavaScrypt Source Code</a>
+       (<a href="http://www.info-zip.org/" target="_blank">Zipped</a> archive)</li>
+</ul>
+<!-- -FULL -->
+
+<p />
+<hr />
+<p />
+<!-- +FULL -->
+<table align="right">
+<tr><td align="center">
+    <a href="http://validator.w3.org/check?uri=referer"
+       target="FourmilabValidation"><img
+       src="http://www.fourmilab.ch/images/icons/valid-xhtml10.png"
+       alt="Valid XHTML 1.0" height="31" width="88"
+       border="0" /></a>
+</td></tr>
+</table>
+<!-- -FULL -->
+<address>
+by <a href="http://www.fourmilab.ch/">John Walker</a><br />
+December, 2005
+</address>
+<center>
+<em>This document is in the public domain.</em>
+</center>
+
+</body>
+</html>

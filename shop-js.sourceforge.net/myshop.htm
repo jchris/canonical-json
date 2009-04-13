@@ -1,0 +1,47 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type"
+content="text/html; charset=iso-8859-1">
+<meta name="GENERATOR" content="Microsoft FrontPage Express 2.0">
+<title>Shopping Demo</title>
+</head>
+
+<body>
+<script src="myshop.js"></script><script> showItems() </script>
+
+<hr>
+
+<form name="shop">
+    <h3>Demo Stuff... Add some things to your cart to see how it
+    looks &amp; works...</h3>
+    <p>Description: <input type="text" size="20" name="d">
+    Quantity: <input type="text" size="2" name="q"> Price: $ <input
+    type="text" size="5" name="p"> <input type="button"
+    value="Add to Cart"
+    onclick="itemAdd(shop.d.value,shop.q.value,shop.p.value)"> </p>
+</form>
+
+<p>You can add a $50 <em>One eye'd one-ear'd flying purple people
+eater</em> by clicking <input type="button" name="B1"
+value="here"
+onclick="itemAdd('One-eyed one-eard flying purple people eater','1','50')"></p>
+
+<p>Source looks like this: &lt;input type=&quot;button&quot; name=&quot;B1&quot;
+value=&quot;here&quot; onclick=&quot;itemAdd('One-eyed one-eard
+flying purple people eater','1','50')&quot;&gt;</p>
+
+<p>Or you can add one by clicking <a href="myshop.htm"
+onclick="itemAdd('One-eyed one-eard flying purple people eater','1','50')">here</a>.</p>
+
+<p>Source looks like this: &lt;a href=&quot;myshop.htm&quot;
+onclick=&quot;itemAdd('One-eyed one-eard flying purple people
+eater','1','50')&quot;&gt;here&lt;/a&gt;.</p>
+
+<p>Note that the price and quantity are string paramaters, not
+numeric.</p>
+
+<p>What do you think of <a href="mailto:jhanna@cproject.com">John's</a>
+cart?</p>
+</body>
+</html>

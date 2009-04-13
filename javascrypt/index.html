@@ -1,0 +1,282 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>JavaScrypt: Browser-Based Cryptography Tools</title>
+<style type="text/css">
+    body {
+        margin-left: 15%;
+        margin-right: 10%;
+	background-color: #FFFFFF;
+	color: #000000;
+    }
+    
+    input.ctr {
+        text-align: center
+    }
+    
+    ul.pspace li {
+    	margin-top: 1ex;
+    }
+</style>
+
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<meta name="keywords" content="javascrypt, browser, encryption, aes, advanced, system, javascript" />
+<meta name="description" content="JavaScrypt: Browser-Based Cryptography Tools" />
+<meta name="author" content="John Walker" />
+<meta name="robots" content="index" />
+
+</head>
+
+<body>
+
+<h1>JavaScrypt: Browser-Based Cryptography Tools</h1>
+
+<hr style="background-color: rgb(192, 192, 192); color: #000000;" />
+
+<p>
+Welcome to JavaScrypt, the high-security data encryption
+solution which runs entirely in your Web browser.
+To use the page, your browser must support
+JavaScript and you must not have disabled execution of that
+language.  Let's see...
+</p>
+
+<center>
+
+<form name="warning" action="#" onsubmit="return false;">
+<input type="text" name="warning"
+    style="background-color: #FFA0A0; color: #000000;"
+    value="No go!  Your browser does not support JavaScript or it is disabled."
+    size="70" class="ctr" readonly="readonly" />
+</form>
+</center>
+
+<script type="text/javascript" language="JavaScript">
+<!--
+    //  Clear out "sorry, no JavaScript" message from text box.
+    document.warning.warning.value = "Your browser supports JavaScript-" +
+    	"-you can use these programs.";
+    document.warning.warning.style.backgroundColor = "#00FF00";
+// -->
+</script>
+
+<p>
+If the box above says "Your browser supports JavaScript", you're in business.
+</p>
+
+<p>
+JavaScrypt runs <em>entirely in your browser</em>--nothing
+is sent to any Web site when you use it.  You can, if you wish,
+<a href="javascrypt.zip">download JavaScrypt</a>
+to your own computer and use it when not connected
+to the Internet.
+</p>
+
+<p>
+JavaScrypt's encryption facilities use the
+<a href="http://csrc.nist.gov/CryptoToolkit/aes/" target="_blank">Advanced
+Encryption Standard</a> (AES) adopted by the United States as
+<a href="http://csrc.nist.gov/publications/fips/fips197/fips-197.pdf" target="_blank">Federal
+Information Processing Standard 197</a>.  AES supports key lengths of
+128, 192, and 256 bits; JavaScrypt uses 256 bit keys exclusively.
+</p>
+
+<p>
+If you're already familiar with encryption, proceed directly to the pages which
+implement the various components of JavaScrypt.  If you're a newcomer,
+you may prefer to work through the
+<a href="example.html">JavaScrypt Tutorial</a>, which demonstrates
+how they're used.
+</p>
+
+<h3>JavaScrypt Components</h3>
+
+<ul>
+    <li><a href="example.html">JavaScrypt Tutorial</a></li>
+    <li><a href="javascrypt.html">Encryption/Decryption Utility</a><br />
+    	<small><a href="jscrypt.html">"Lean" version of the above</a></small></li>
+    <li><a href="stego.html">Steganography (Hidden Writing) Utility</a></li>
+    <li><a href="pass_phrase.html">Pass Phrase Generator</a></li>
+    <li><a href="javascrypt.zip">Download JavaScrypt Source Code</a>
+    	(<a href="http://www.info-zip.org/" target="_blank">Zipped</a> archive)
+    	<br /><a href="distribution.html">Source Distribution Documentation</a>
+    	<br /><small>
+    	<a href="http://www.fourmilab.ch/javascrypt/javascrypt.zip.sig"
+	   type="application/pgp-signature">GPG Signature</a> &nbsp;
+    	<a href="http://www.fourmilab.ch/documents/distkey.txt">Fourmilab Distribution
+    	Signing Key</a> &nbsp;
+    	<a href="http://keyserver.veridis.com:11371/search?q=0x5C1E8F39">Verify</a>
+	</small></li>
+    <li><a href="log.html">Development Log</a></li>
+</ul>
+
+<h2><a name="why">Why Encrypt with JavaScript?</a></h2>
+
+<p>
+At first glance, JavaScript may seem an odd choice for
+implementing encryption.  These programs are rather
+large and complicated, and downloading and running them them
+takes longer than would be required for a Java applet or to
+access a CGI program on a Web server.  I chose JavaScript for
+two reasons: <em>security</em> and <em>transparency</em>.
+</p>
+
+<p>
+<b>Security.</b> &nbsp;
+The sole reason for encryption is to protect privacy.  This
+means the process cannot involve any link whose security is
+suspect.  If messages were encrypted by a Web server, they
+would have to pass over the Internet, where any intermediate
+site might intercept them.  Even if some mechanism such as
+secure HTTP could absolutely prevent the data's being
+intercepted, you'd still have no way to be sure the site which
+performed the encryption didn't keep a copy in a file,
+conveniently tagged with your Internet address.
+</p>
+
+<p>
+In order to have any degree of security, it is essential
+that all processing be done on <em>your</em> computer, without
+involving any transmission or interaction with other
+sites on the Internet.  A Web browser with JavaScript makes
+this possible, since the programs embedded in these
+pages run entirely on your own computer and do not
+transmit anything over the Internet.  Output appears
+only in text boxes, allowing you to cut and paste it
+to another application.  From there on, security is
+up to you.
+</p>
+
+<p>
+Security is never absolute.  Data encrypted with these pages
+might be compromised in a variety of ways, including but not
+limited to the following:
+</p>
+
+<ul class="pspace">
+<li>    Your Web browser and/or JavaScript interpreter may
+        contain bugs or deliberate security violations
+        which report activity on your computer back to some
+        other Internet site.</li>
+
+<li>    Some other applet running on another page in your
+        browser, perhaps without your being aware of its
+        existence, is spying on other windows.</li>
+
+<li>    Some other "spyware" application running on your computer
+        may have compromised your system's security and
+        be snooping on your activity.</li>
+
+<li>    Your Web browser may be keeping a "history log"
+        or "cache" of data you generate.  Somebody may
+        come along later and recover a copy of your data
+        from that log.</li>
+
+<li>    The implementation of these pages may contain a bug
+        or deliberate error which makes its results
+        insecure.  This is why <a href="#trans"><cite>transparency</cite></a>,
+        discussed below, is essential.</li>
+
+<li>    Your computer's security may have been compromised
+        physically; when's the last time you checked that a
+        bug that transmits your keystrokes and/or screen
+        contents to that white van parked down the street
+        wasn't lurking inside your computer cabinet?</li>
+</ul>
+
+<p>
+One can whip oneself into a fine fever of paranoia worrying about
+things like this.  One way to rule out the most probable risks
+is to
+<a href="javascrypt.zip">download</a>
+a copy of these pages and the JavaScript programs they
+reference and run it from a "<tt><b>file:</b></tt>" URL on a
+computer with no network connection whatsoever located
+in secure premises under your control.  And look very
+carefully at any files created by your Web browser.  You may
+find the most interesting things squirreled away
+there.&nbsp;.&nbsp;.&nbsp;.
+</p>
+
+<p>
+<b><a name="trans">Transparency</a>.</b> &nbsp;
+Any security-related tool is only as good as its design and
+implementation.  <em>Transparency</em> means that, in essence,
+all the moving parts are visible so you can judge for yourself
+whether the tool merits your confidence.  In the case of a
+program, this means that complete source code must be
+available, and that you can verify that the program you're
+running corresponds to the source code provided.
+</p>
+
+<p>
+The very nature of JavaScript achieves this transparency. The
+programs are embedded into the Web pages you interact with; to
+examine them you need only use your browser's "View Source"
+facility, or save the page into a file on your computer and
+read it with a text editor; any JavaScript components the pages
+reference can be similarly downloaded and examined in source
+code form.  JavaScript's being an interpreted language
+eliminates the risk of your running a program different from
+the purported source code: with an interpreted language what
+you read is what you run.
+</p>
+
+<p>
+Transparency is important even if you don't know enough about
+programming or security to determine whether the programs
+contain any flaws.  The very fact that they can be examined
+by anybody allows those with the required expertise to pass
+judgment, and you can form your own conclusions based on
+their analysis.
+</p>
+
+<h3>Acknowledgments</h3>
+
+<p>
+The JavaScript implementation of the AES (Rijndael) encryption algorithm
+was developed by <a href="http://www-cse.ucsd.edu/~fritz/index.html" target="_blank">Fritz Schneider</a>;
+it has been modified slightly for use in JavaScrypt.  If you wish to integrate
+AES encryption in a JavaScript utility of your own, you may prefer to start with
+<a href="http://www-cse.ucsd.edu/~fritz/rijndael.html" target="_blank">the
+original version</a>.
+</p>
+
+<p>
+The JavaScript implementation of the
+<a href="http://www.ietf.org/rfc/rfc1321.txt" target="_blank"><b>MD5 message-digest algorithm</b></a>
+was developed by Henri Torgemane; please view the
+source code file <tt>md5.js</tt> to examine the code, including the copyright
+notice and conditions of use.  The MD5 algorithm was developed by Ron Rivest.
+</p>
+
+<p />
+<hr />
+<p />
+<table align="right">
+<tr><td align="center">
+<form name="feedback" method="post" action="http://www.fourmilab.ch/cgi-bin/FeedbackForm.pl">
+<input type="hidden" name="pagetitle" value="&lt;cite&gt;JavaScrypt&lt;/cite&gt;" />
+<input type="hidden" name="backlink" value="Back to &lt;cite&gt;JavaScrypt&lt;/cite&gt;" />
+<input type="submit" value=" Send Feedback " />
+</form>
+</td></tr>
+<tr><td align="center">
+    <a href="http://validator.w3.org/check?uri=referer"
+       target="FourmilabValidation"><img
+       src="http://www.fourmilab.ch/images/icons/valid-xhtml10.png"
+       alt="Valid XHTML 1.0" height="31" width="88"
+       border="0" /></a>
+</td></tr>
+</table>
+<address>
+by <a href="http://www.fourmilab.ch/">John Walker</a><br />
+December, 2005
+</address>
+<center>
+<em>This document is in the public domain.</em>
+</center>
+
+</body>
+</html>

@@ -7,6 +7,7 @@
     <script type="text/javascript" charset="utf-8">
       T = fireunit.ok;
 
+      // tests for repeatable serializations
       var c = CJSON.stringify({foo : "bar"});
       T(c == '{"foo":"bar"}', "basic");
 
@@ -43,6 +44,15 @@
       T(c == '{"sixes":0.67,"third":0.33,"tiny":0}',
       "floats are rounded by precision");
 
+      // tests for object signing
+      var obj = {
+        message : "text"
+      }
+      var signed = GPG.sign(obj, "message", pubkey);
+      T(signed.signatures.message, 
+        "should create a signatures field");
+      
+      
     </script>
   </head>
 </html>

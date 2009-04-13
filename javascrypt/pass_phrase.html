@@ -1,0 +1,533 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>Pass Phrase Generator</title>
+<style type="text/css">
+    body {
+        margin-left: 15%;
+        margin-right: 10%;
+	background-color: #FFFFFF;
+	color: #000000;
+    }
+</style>
+
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<meta name="keywords" content="pass, phrase, generator, encryption, md5, javascript" />
+<meta name="description" content="Pass Phrase Generator" />
+<meta name="author" content="John Walker" />
+<meta name="robots" content="index" />
+
+<!-- Import the external JavaScript modules -->
+<script type="text/javascript" language="JavaScript" src="entropy.js"></script>
+<script type="text/javascript" language="JavaScript" src="aes.js"></script>
+<script type="text/javascript" language="JavaScript" src="aesprng.js"></script>
+<script type="text/javascript" language="JavaScript" src="md5.js"></script>
+<script type="text/javascript" language="JavaScript" src="wordtab.js"></script>
+<script type="text/javascript" language="JavaScript" src="utf-8.js"></script>
+
+<!-- +FULL -->
+<script type="text/javascript" language="JavaScript">
+<!--    
+    var prng;	    	    	    	    // Pseudorandom number generator
+    var seed;	    	    	    	    // Current seed array
+    
+    //	setSeed  - -  Set seed from seed string
+        
+    function setSeed() {
+    	if (document.seed.keytype[0].checked) {
+    	    var s = encode_utf8(document.seed.text.value);
+	    var i, kmd5e, kmd5o;
+
+	    if (s.length == 1) {
+	    	s += s;
+	    }
+	    
+	    md5_init();
+	    for (i = 0; i < s.length; i += 2) {
+	    	md5_update(s.charCodeAt(i));
+	    }
+	    md5_finish();
+	    kmd5e = byteArrayToHex(digestBits);
+	    
+	    md5_init();
+	    for (i = 1; i < s.length; i += 2) {
+	    	md5_update(s.charCodeAt(i));
+	    }
+	    md5_finish();
+	    kmd5o = byteArrayToHex(digestBits);
+
+	    var hs = kmd5e + kmd5o;
+	    seed =  hexToByteArray(hs);
+	} else {    	    // Hexadecimal key
+    	    var s = document.seed.text.value;
+    	    var hexDigits = "0123456789abcdefABCDEF";
+	    var hs = "", i, bogus = false;
+
+	    for (i = 0; i < s.length; i++) {
+		var c = s.charAt(i);
+		if (hexDigits.indexOf(c) >= 0) {
+	    	    hs += c;
+		} else {
+		    bogus = true;
+		}
+	    }
+	    if (bogus) {
+	    	alert("Error: Improper character(s) in hexadecimal key.");
+	    }
+	    if (hs.length > (keySizeInBits / 4)) {
+	    	alert("Warning: hexadecimal key exceeds " +
+		      (keySizeInBits / 4) + " digit maximum; truncated.");
+		document.seed.text.value = hs = hs.slice(0, 64);
+	    } else {
+	    	//  If key is fewer than 64 hex digits, fill it with zeroes
+	    	while (hs.length < (keySizeInBits / 4)) {
+		    hs += "0";
+		}
+    	    }
+	    seed =  hexToByteArray(hs);
+    	}
+    }
+                
+    /*	Determine number of words from current dictionary equivalent to
+    	requested number of bits in key.  */
+    
+    function bitsWord() {
+    	var b = document.results.bits.value;
+	if (isNaN(b) || b < 32) {
+	    b = document.results.bits.value = 32;
+	}
+	if (b > 1024) {
+	    b = document.results.bits.value = 1024;
+	}
+	var n;
+	for (n = 1; b > Math.floor(Math.LOG2E * Math.log(twords) * n); n++) ;
+	document.results.howlong.value = n;
+    }
+
+    //	Retrieve word given index in list of words of that length
+
+    function retrieveWord(length, index) {
+    	if ((length >= minw) && (length <= maxw) &&
+	    (index >= 0) && (index < nwords[length])) {
+	    return cwords[length].substring(length * index, length * (index + 1));
+	}
+	return "";
+    }
+    
+    //	Obtain word by index in complete dictionary
+    
+    function indexWord(index) {
+    	if ((index >= 0) && (index < twords)) {
+	    var j;
+
+	    for (j = minw; j <= maxw; j++) {
+		if (index < nwords[j]) {
+		    break;
+		}
+		index -= nwords[j];
+	    }
+	    return retrieveWord(j, index);
+	}
+	return "";
+    }
+    
+    //	Generate pass phrases
+    
+    function GeneratePassPhrases() {
+    	var i, j, w, sign = document.results.signatures.checked, sig = "";
+	
+	//  Reality check number of phrases and phrase length
+	
+	i = document.results.howmany.value;
+	if (isNaN(i) || (i < 1)) {
+	    i = 1;
+	}
+	if (i > 100) {
+	    i = 100;
+	}
+	if (i != document.results.howmany.value) {
+	    document.results.howmany.value = i;
+	}
+	
+	i = document.results.howlong.value;
+	if (isNaN(i) || (i < 2)) {
+	    i = 2;
+	}
+	if (i > 24) {
+	    i = 24;
+	}
+	if (i != document.results.howlong.value) {
+	    document.results.howlong.value = i;
+	}
+	
+	//  Update number of bits equivalent to phrase words requested
+	
+	document.results.bits.value = Math.floor(Math.LOG2E *
+	    Math.log(twords) * document.results.howlong.value);
+	
+	if (sign) {
+	    sig = "\n==========  MD5 Signatures  ==========\n".replace(/=/g,"-");
+	}
+	
+	
+	setSeed();
+	prng = new AESprng(seed);
+	
+    	document.results.text.value = "";
+	
+    	for (i = 0; i < document.results.howmany.value; i++) {
+	    var k = "", nw = 0;
+	    while (nw < document.results.howlong.value) {
+		if (k.length > 0) {
+		    k += " ";
+		}
+    	    	k += indexWord(prng.nextInt(twords));
+		nw++;
+	    }
+
+    	    //	If upper case phrases have been requested, so convert this one
+	    
+    	    if (document.results.uppercase.checked) {
+	    	k = k.toUpperCase();
+	    }
+	    
+	    /*	If we're including MD5 signatures of the phrases, compute
+	    	the signature of this phrase and append to the list we'll
+		tack on to the end of the signature table.  */
+		
+	    if (sign) {	
+		md5_init();
+		for (j = 0; j < k.length; j++) {
+	    	    md5_update(k.charCodeAt(j));
+		}
+		md5_finish();
+        	var n, hex = "0123456789ABCDEF";
+
+        	for (n = 0; n < 16; n++) {
+                    sig += hex.charAt(digestBits[n] >> 4);
+                    sig += hex.charAt(digestBits[n] & 0xF);
+        	}
+        	sig += "\n";
+	    }
+	    
+	    /*	If the user wants the phrases to be numbered, prefix each with
+	    	a serial number with enough digits to accommodate them all.  */
+		
+    	    if (document.results.number.checked) {
+	    	var ndig = Math.floor(Math.LOG10E * Math.log(document.results.howmany.value)) + 1;
+		var nu = "" + (i + 1);
+		
+		while (nu.length < ndig) {
+		    nu = " " + nu;
+		}
+		k = nu + ") " + k;
+	    }
+    	    document.results.text.value += k + "\n";
+	}
+	document.results.text.value += sig;
+	delete prng;
+    }
+   
+    //	Generate a pseudorandom seed value
+    
+    function Generate_seed() {
+    	var i, j, k = "";
+	
+	addEntropyTime();
+	var seed = keyFromEntropy();
+	
+    	var prng = new AESprng(seed);
+	if (document.seed.keytype[0].checked) {
+	    //	Text key
+	    var charA = ("A").charCodeAt(0);
+	    
+	    for (i = 0; i < 12; i++) {
+		if (i > 0) {
+	    	    k += "-";
+		}
+		for (j = 0; j < 5; j++) {
+	    	    k += String.fromCharCode(charA + prng.nextInt(25));
+		}
+	    }
+	} else {
+	    // Hexadecimal key
+	    var hexDigits = "0123456789ABCDEF";
+	    
+	    for (i = 0; i < 64; i++) {
+	    	k += hexDigits.charAt(prng.nextInt(15));
+	    }
+	}
+    	document.seed.text.value = k;
+	delete prng;
+    }
+    
+    /*	This is our onLoad event handler.  If the seed text input field
+    	is blank, generate an initial default seed.  This won't be a very
+	high entropy value, as at this point the entropy vector will
+	contain only the time at which the page began to load and the time
+	(very shortly thereafter) which this function was called.  Still,
+	it sure beats a blank seed!  */
+  
+    function nowLoaded() {    
+    	ce();	    	    	    	// Add time we got here to entropy
+    	mouseMotionEntropy(60);   	// Initialise collection of mouse motion entropy
+    	if (document.seed.text.value == '') {
+    	    Generate_seed();
+    	}
+    }
+
+// -->
+</script>
+<!-- -FULL -->
+
+</head>
+
+<body onload="nowLoaded();">
+
+<h1>Pass Phrase Generator</h1>
+
+<hr style="background-color: rgb(192, 192, 192); color: #000000;" />
+
+<p>
+Many people find phrases in their mother tongue, even
+if complete nonsense, easier to remember and type than
+passwords consisting of arbitrary
+<a href="http://www.fourmilab.ch/onetime/otpjs.html">letters and numbers</a>.
+Of course, since only a minority of sequences of letters
+are words in a given language, the information density or
+<em><a href="http://www.fourmilab.ch/random/" target="_blank">entropy</a></em> of
+such keys is lower, and consequently a phrase must be
+substantially longer than a meaningless key to be equally
+difficult to guess.
+</p>
+
+<p>
+Still, many people prefer pass phrases.  This page generates
+them in the English language.  Simply fill in the number of
+phrases (up to 100) you wish to generate, how many words to use
+in each (or the key length in bits equivalent to a given phrase
+length), then press <b>Generate</b> to fill the <b>Pass Phrases</b> box with
+phrases.  By default, phrases are generated from a pseudorandom
+seed determined from the time of day and the time various
+events occurred after this page was loaded; this seed is shown
+in the <b>Seed</b> box when each set of phrases is generated. 
+You can enter a new seed of your own choice, or press the
+<b>New&nbsp;Seed</b> button to create a new pseudorandom seed. 
+The list of pass phrases is completely determined by the seed,
+and is consequently no more secure than the seed is--if it can be
+guessed, all of the pass phrases generated from it are
+compromised.  Consequently, if you specify your own seed, be
+sure to use something as long and as random as the pass phrases
+you're generating from it.
+</p>
+
+<p>
+Each phrase will be preceded by a number if <b>Number</b>
+is checked, and will use <b>Upper case</b> letters if that
+box is selected.  If <b>Include signatures</b> is checked,
+the list of phrases will be followed by a list of their
+<a href="http://www.fourmilab.ch/md5/">MD5</a> signatures; password validation programs
+may wish to use signatures rather than the actual phrases
+to save memory and reduce the risk of disclosure of the
+original phrases.
+</p>
+
+<p>
+If you set <b>Words</b> to 2 and check <b>Upper case</b>, the
+results are excellent candidates for codenames for operational
+missions, for example,
+"<tt>LAMENTED BIGMOUTH</tt>",
+"<tt>CHROMIC TATTOO</tt>",
+"<tt>DRIZZLE INNUENDO</tt>", and
+"<tt>DRIBBLE HUMILITY</tt>".
+</p>
+
+<form name="seed" action="#" onsubmit="return false;">
+
+<h3>Seed</h3>
+
+<p align="center">
+<input type="text" name="text" size="80" maxlength="1024"
+       style="background-color: rgb(255, 255, 200); color: #000000; font-family: monospace;"
+       onfocus="ce();" onblur="ce();" onkeydown="ce();" />
+<br />
+<input type="radio" checked="checked" name="keytype" onfocus="ce();" onblur="ce();" onclick="ce();" />&nbsp;Text
+&nbsp;
+<input type="radio" name="keytype" onfocus="ce();" onblur="ce();" onclick="ce();" />&nbsp;Hexadecimal
+&nbsp;
+<input type="button" name="generate" value=" New Seed " onfocus="ce();" onblur="ce();" onclick="ce(); Generate_seed();" />
+&nbsp;
+<input type="button" value=" Clear " onfocus="ce();" onblur="ce();" onclick="ce(); document.seed.text.value = '';" />
+&nbsp;
+<input type="button" value=" Select " onfocus="ce();" onblur="ce();" onclick="ce(); document.seed.text.select();" />
+</p>
+</form>
+
+<form name="results" action="#" onsubmit="return false;">
+
+<h3>Pass Phrases</h3>
+
+<p align="center">
+<textarea name="text" rows="24" cols="80"
+    style="border-color: blue; background-color: rgb(255, 255, 192); color: #000000;"
+    onfocus="ce();" onblur="ce();" onclick="ce();" onkeydown="ce();">
+</textarea>
+
+<br />
+
+<input type="button" name="generate" value=" Generate " onfocus="ce();" onblur="ce();" onclick="ce(); GeneratePassPhrases();" />
+&nbsp;
+<input type="button" value=" Clear " onfocus="ce();" onblur="ce();" onclick="ce(); document.results.text.value = '';" />
+&nbsp;
+<input type="reset" value=" Reset " onfocus="ce();" onblur="ce();" onclick="ce();" />
+&nbsp;
+<input type="button" value=" Select " onfocus="ce();" onblur="ce();" onclick="ce(); document.results.text.select();" />
+</p>
+
+<p align="center">
+Phrases:&nbsp;<input type="text" name="howmany" size="4" maxlength="6" value="20"
+       onfocus="ce();" onblur="ce();" onkeydown="ce();" />
+&nbsp;
+Words:&nbsp;<input type="text" name="howlong" size="4" maxlength="6" value="6"
+       onfocus="ce();" onblur="ce();" onkeydown="ce();" />
+&nbsp;
+Bits:&nbsp;<input type="text" name="bits" size="5" maxlength="6" value=""
+       onfocus="ce();" onblur="ce(); bitsWord();" onkeydown="ce();" />
+       
+<br />
+
+<input type="checkbox" checked="checked" name="number"
+       onfocus="ce();" onblur="ce();" onkeydown="ce();" />&nbsp;Number
+&nbsp;
+<input type="checkbox" name="uppercase"
+       onfocus="ce();" onblur="ce();" onkeydown="ce();" />&nbsp;upper&nbsp;case
+&nbsp;
+<input type="checkbox" name="signatures"
+       onfocus="ce();" onblur="ce();" onkeydown="ce();" />&nbsp;Include&nbsp;signatures
+       
+</p>
+</form>
+
+<h2>Words and Bits</h2>
+
+<p>
+The relationship between the number of words in a pass phrase
+and the equivalent number of bits in an encryption key is as
+follows. We must assume (since anybody, including adversaries,
+can download this page) that the dictionary from which we
+choose words is known. This dictionary contains 27489
+(somewhat) common English words, so the information content of
+a word chosen randomly from the dictionary is simply its order
+in the dictionary, 0 to 27488, or
+log<sub>2</sub>(27489)&#8776;14.75 bits per word.  When you
+specify a number of <b>Words</b>, the <b>Bits</b> field shows
+the number of bits (rounded down) equivalent; when you request
+a key of a given number of <b>Bits</b>, the <b>Words</b> field
+is set to produce a key with information content of at least
+that number of bits, and the <b>Bits</b> field shows the
+precise bit equivalent (equal to or greater than the number of
+<b>Bits</b> you requested).  To obtain the maximum security
+available from JavaScrypt encryption, you should use keys with
+information content of 256 bits or more.  This is equivalent to
+18 word phrases, which may prove unwieldy if you have to type
+them in.
+</p>
+
+<h2>Signatures</h2>
+
+<p>
+If the <b>Include signatures</b> box is checked, the list of
+pass phrases will be followed by a table of their
+digital signatures, computed using the
+<a href="http://www.fourmilab.ch/md5/" target="_blank">MD5</a> algorithm.
+If you're using the pass phrases for authentication
+in a computer application, you may wish to store only the
+signatures on the computer.  The nature of the MD5 algorithm
+makes it extremely difficult, even if a signature is known,
+to construct an input which will reproduce that signature.  If
+only the signatures are stored on the computer, even if the
+list of signatures were compromised, potential attackers
+would be faced with the formidable challenge of constructing
+pass phrases which matched the signatures.
+</p>
+
+<!--
+                      <h3>Debugging Console</h3>
+
+<form name="debug" action="#" onsubmit="return false;">
+
+<center>
+<textarea name="log" rows="6" cols="80">
+</textarea>
+<br />
+<input type="button" value=" Clear " onClick="document.debug.log.value = '';" />
+&nbsp;
+<input type="button" value=" Test " onClick="TestSomething();" />
+</center>
+</form>
+
+<h4><a href="javascript:">JavaScript Console</a></h4>
+-->
+<script type="text/javascript" language="JavaScript">
+//<!--
+    /*	Test jig for code activated by the "Test" button when the
+    	debugging console is activated.  */
+
+    function TestSomething() {
+    }
+
+    /*  Dump one or more (variable_name, value) pairs given as arguments
+	to the function.  */
+
+    function dump()
+    {
+	var t = "", i;
+
+	for (i = 0; i < arguments.length; i += 2) {
+    	    if (t.length > 0) {
+		t += ", ";
+	    }
+	    t += arguments[i] + " = " + arguments[i + 1];
+	}
+	document.debug.log.value += t + "\n";
+    }
+//-->
+</script>
+
+<h3><a href="index.html">JavaScrypt</a></h3>
+
+<ul>
+    <li><a href="index.html">JavaScrypt Home Page</a></li>
+    <li><a href="example.html">JavaScrypt Tutorial</a></li>
+    <li><a href="javascrypt.html">Encryption/Decryption Utility</a> &nbsp;
+       (<a href="jscrypt.html">lean version</a>)</li>
+    <li><a href="stego.html">Steganography (Hidden Writing) Utility</a></li>
+    <li><a href="javascrypt.zip">Download JavaScrypt Source Code</a>
+       (<a href="http://www.info-zip.org/" target="_blank">Zipped</a> archive)</li>
+</ul>
+
+<h3><a href="http://www.fourmilab.ch/">Fourmilab Home Page</a></h3>
+
+<p />
+<hr />
+<p />
+<table align="right">
+<tr><td align="center">
+    <a href="http://validator.w3.org/check?uri=referer"
+       target="FourmilabValidation"><img
+       src="http://www.fourmilab.ch/images/icons/valid-xhtml10.png"
+       alt="Valid XHTML 1.0" height="31" width="88"
+       border="0" /></a>
+</td></tr>
+</table>
+<address>
+by <a href="http://www.fourmilab.ch/">John Walker</a><br />
+December, 2005
+</address>
+<center>
+<em>This document is in the public domain.</em>
+</center>
+
+</body>
+</html>

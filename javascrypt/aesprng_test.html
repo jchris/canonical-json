@@ -1,0 +1,372 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>AES Pseudorandom Number Generator Test Jig</title>
+<style type="text/css">
+    body {
+        margin-left: 15%;
+        margin-right: 10%;
+	background-color: #FFFFFF;
+	color: #000000;
+    }
+</style>
+
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<meta name="keywords" content="pass, phrase, generator, encryption, md5, javascript" />
+<meta name="description" content="AES Pseudorandom Number Generator Test Jig" />
+<meta name="author" content="John Walker" />
+<meta name="robots" content="index" />
+
+<!-- Import the external JavaScript modules -->
+<script type="text/javascript" language="JavaScript" src="entropy.js"></script>
+<script type="text/javascript" language="JavaScript" src="aes.js"></script>
+<script type="text/javascript" language="JavaScript" src="aesprng.js"></script>
+<script type="text/javascript" language="JavaScript" src="md5.js"></script>
+
+<!-- +FULL -->
+<script type="text/javascript" language="JavaScript">
+<!--    
+    var loadTime = (new Date()).getTime();  // Save time page was loaded
+    var seed;
+     
+    //	setSeed  - -  Set seed from seed string
+        
+    function setSeed() {
+    	if (document.seed.keytype[0].checked) {
+    	    var s = document.seed.text.value;
+	    var i, kmd5e, kmd5o;
+	    
+	    if (s.length == 1) {
+	    	s += s;
+	    }
+	    
+	    md5_init();
+	    for (i = 0; i < s.length; i += 2) {
+	    	md5_update(s.charCodeAt(i));
+	    }
+	    md5_finish();
+	    kmd5e = byteArrayToHex(digestBits);
+	    
+	    md5_init();
+	    for (i = 1; i < s.length; i += 2) {
+	    	md5_update(s.charCodeAt(i));
+	    }
+	    md5_finish();
+	    kmd5o = byteArrayToHex(digestBits);
+
+	    var hs = kmd5e + kmd5o;
+	    seed =  hexToByteArray(hs);
+	} else {    	    // Hexadecimal key
+    	    var s = document.seed.text.value;
+    	    var hexDigits = "0123456789abcdefABCDEF";
+	    var hs = "", i, bogus = false;
+
+	    for (i = 0; i < s.length; i++) {
+		var c = s.charAt(i);
+		if (hexDigits.indexOf(c) >= 0) {
+	    	    hs += c;
+		} else {
+		    bogus = true;
+		}
+	    }
+	    if (bogus) {
+	    	alert("Error: Improper character(s) in hexadecimal key.");
+	    }
+	    if (hs.length > (keySizeInBits / 4)) {
+	    	alert("Warning: hexadecimal key exceeds " +
+		      (keySizeInBits / 4) + " digit maximum; truncated.");
+		document.seed.text.value = hs = hs.slice(0, 64);
+	    } else {
+	    	//  If key is fewer than 64 hex digits, fill it with zeroes
+	    	while (hs.length < (keySizeInBits / 4)) {
+		    hs += "0";
+		}
+    	    }
+	    seed =  hexToByteArray(hs);
+    	}
+    }
+   
+    //	Generate a pseudorandom seed value
+    
+    function Generate_seed() {
+    	var i, j, k = "";
+	
+	addEntropyTime();
+	var seed = keyFromEntropy();
+	
+    	var prng = new AESprng(seed);
+	if (document.seed.keytype[0].checked) {
+	    //	Text key
+	    var charA = ("A").charCodeAt(0);
+	    
+	    for (i = 0; i < 12; i++) {
+		if (i > 0) {
+	    	    k += "-";
+		}
+		for (j = 0; j < 5; j++) {
+	    	    k += String.fromCharCode(charA + prng.nextInt(25));
+		}
+	    }
+	} else {
+	    // Hexadecimal key
+	    var hexDigits = "0123456789ABCDEF";
+	    
+	    for (i = 0; i < 64; i++) {
+	    	k += hexDigits.charAt(prng.nextInt(15));
+	    }
+	}
+    	document.seed.text.value = k;
+	delete prng;
+    }
+    
+    /*	This is our onLoad event handler.  If the seed text input field
+    	is blank, generate an initial default seed.  This won't be a very
+	high entropy value, as at this point the entropy vector will
+	contain only the time at which the page began to load and the time
+	(very shortly thereafter) which this function was called.  Still,
+	it sure beats a blank seed!  */
+  
+    function nowLoaded() {    
+    	ce();	    	    	    	// Add time we got here to entropy
+    	mouseMotionEntropy(60);   	// Initialise collection of mouse motion entropy
+    	if (document.seed.text.value == '') {
+    	    Generate_seed();
+    	}
+    }
+            
+    /*	Generate requested number of pseudorandom bytes with
+    	the specified seed.  */
+
+    function GenerateData() {
+    	var howManyBytes = document.results.nbytes.value;
+	var testNextInt = document.results.testtype[1].checked;
+	
+    	setSeed();
+    	var g = new AESprng(seed);
+	
+	var j, k = 0, n = 0, s = "", v = "", f = "", adr = "     0: ";
+	for (j = 0; j < howManyBytes; j++) {
+	    if (n >= 16) {
+	    	n = 0;
+	    	v += adr + s + "\n";
+		f = s = "";
+		adr = j.toString(16).toUpperCase();
+		adr = ("      ").substring(0, 6 - adr.length) + adr + ": ";
+	    } else if (n == 8) {
+	    	s += " ";
+	    }
+	    n++;
+	    if (testNextInt) {
+	    	s += f + g.nextInt(255).toString(16).toUpperCase().replace(/^(\w)$/, "0$1");
+	    } else {
+    	    	s += f + g.next().toString(16).toUpperCase().replace(/^(\w)$/, "0$1");
+    	    }
+	    f = " ";
+    	    if (((j % 1024) == 1023) || (j >= (howManyBytes - 1))) {
+	    	document.results.generated.value = j + 1;
+	    }
+	}
+	v += adr + s + "\n";
+	document.results.text.value = v;
+	document.results.text.select();
+    }
+
+// -->
+</script>
+<!-- -FULL -->
+
+</head>
+
+<body onload="nowLoaded();">
+
+<h1>AES Pseudorandom Number Generator Test Jig</h1>
+
+<hr style="background-color: rgb(192, 192, 192); color: #000000;" />
+
+<p>
+This page permits evaluation of the quality
+of pseudorandom data generated by the AESprng generator.
+It is used in conjunction with the
+<a href="http://www.fourmilab.ch/xd/" target="_blank">XD</a>
+and
+<a href="http://www.fourmilab.ch/random/" target="_blank">ENT</a>
+programs.
+</p>
+
+<p>
+Pressing the <b>Generate</b> button generates the number of bytes
+of pseudorandom specified in tbe <b>Bytes</b> box seeding the
+generator with the specified <b>Seed</b>, placing the results in hexadecimal
+form in the <b>Pseudorandom Sequence</b> box and selecting it.  You can then copy the data
+and paste it to a file (for example "<tt>/tmp/a</tt>"), which
+may converted to binary with the XD program and tested for
+randomness with the ENT program with a sequence like the following.
+</p>
+
+<pre>
+    % xd -l /tmp/a /tmp/b
+    % wc -c /tmp/b
+      65536 /tmp/b
+    % ent /tmp/b
+    Entropy = 7.997183 bits per byte.
+
+    Optimum compression would reduce the size
+    of this 65536 byte file by 0 percent.
+
+    Chi square distribution for 65536 samples is 255.48, and randomly
+    would exceed this value 50.00 percent of the times.
+
+    Arithmetic mean value of data bytes is 127.3066 (127.5 = random).
+    Monte Carlo value for Pi is 3.163156931 (error 0.69 percent).
+    Serial correlation coefficient is -0.000628 (totally uncorrelated = 0.0).
+</pre>
+
+This is the result obtained seeding the generator with a single
+hexadecimal key byte of 1.
+
+<p>
+Note: when you run this test, you may have to answer one or more
+warning messages issued by the browser to the effect that the
+script has become "unresponsive".  Do not cancel the script--tell
+the browser to keep going until the hexadecimal data appear in the
+box.  In Mozilla 1.5 and possibly other browsers, this warning alert
+is very poorly phrased: if you click "OK", it <em>terminates</em>
+the script.  To permit the script to continue, you must
+click the "Cancel" button.  It pays to read the text of such
+warnings carefully before clicking away!
+</p>
+
+<h3>Seed</h3>
+
+<form name="seed" action="#" onsubmit="return false;">
+
+<center>
+<input type="text" name="text" size="80" maxlength="1024"
+       style="background-color: rgb(255, 255, 200); color: #000000; font-family: monospace;"
+       onfocus="ce();" onblur="ce();" onkeydown="ce();" />
+<br />
+<input type="radio" checked="checked" name="keytype" onfocus="ce();" onblur="ce();" onclick="ce();" />&nbsp;Text
+&nbsp;
+<input type="radio" name="keytype" onfocus="ce();" onblur="ce();" onclick="ce();" />&nbsp;Hexadecimal
+&nbsp;
+<input type="button" name="generate" value=" New Seed " onfocus="ce();" onblur="ce();" onclick="ce(); Generate_seed();" />
+&nbsp;
+<input type="button" value=" Clear " onfocus="ce();" onblur="ce();" onclick="ce(); document.seed.text.value = '';" />
+&nbsp;
+<input type="button" value=" Select " onfocus="ce();" onblur="ce();" onclick="ce(); document.seed.text.select();" />
+</center>
+</form>
+
+<h3>Pseudorandom Sequence</h3>
+
+<form name="results" action="#" onsubmit="return false;">
+
+<center>
+<textarea name="text" rows="24" cols="80"
+    style="border-color: blue; background-color: rgb(255, 255, 192); color: #000000;">
+</textarea>
+
+<p />
+Bytes:&nbsp;<input type="text" name="nbytes" size="6" maxlength="8" value="1024"
+       onfocus="ce();" onblur="ce();" onkeydown="ce();" />
+&nbsp;
+Generated:&nbsp;<input type="text" name="generated" size="6" maxlength="8" value=""
+       onfocus="ce();" onblur="ce();" onkeydown="ce();" />
+&nbsp;
+Test:
+<input type="radio" checked="checked" name="testtype" onfocus="ce();" onblur="ce();" onclick="ce();" />&nbsp;<tt>next()</tt>
+<input type="radio" name="testtype" onfocus="ce();" onblur="ce();" onclick="ce();" />&nbsp;<tt>nextInt(255)</tt>
+<br />
+<input type="button" value=" Generate " onclick="GenerateData();" />
+&nbsp;
+<input type="button" value=" Clear " onclick="document.results.text.value = '';" />
+&nbsp;
+<input type="reset" value=" Reset " onclick="ce();" />
+&nbsp;
+<input type="button" value=" Select " onclick="document.results.text.select();" />
+</center>
+</form>
+
+<p>
+Enter the number of bytes you wish to generate in the <b>Bytes</b> field
+above.  If you check the <tt>next()</tt> button, the "get next byte"
+method will be tested.  If the <tt>nextInt(255)</tt> button is
+checked, bytes are obtained with the <tt>nextInt</tt> method which
+returns a 32 bit value and scales it to the desired range, in this case
+0 to 255.  If the script execution pauses during generation with
+an "unresponsive" warning from the browser, the <b>Generated</b> field
+will show the number of bytes generated so far, rounded down to
+a multiple of 1024.
+</p>
+
+<!--
+                      <h3>Debugging Console</h3>
+
+<form name="debug" action="#" onsubmit="return false;">
+
+<center>
+<textarea name="log" rows="16" cols="80">
+</textarea>
+<br />
+<input type="button" value=" Clear " onclick="document.debug.log.value = '';" />
+&nbsp;
+<input type="button" value=" Test " onclick="TestSomething();" />
+</center>
+</form>
+<br />
+<h4><a href="javascript:">JavaScript Console</a></h4>
+-->
+
+<script type="text/javascript" language="JavaScript">
+<!--
+    /*	Test jig for code activated by the "Test" button when the
+    	debugging console is activated.  */
+	
+    function TestSomething() {
+    }
+
+    /*  Dump one or more (variable_name, value) pairs given as arguments
+	to the function.  */
+
+    function dump()
+    {
+	var t = "", i;
+
+	for (i = 0; i < arguments.length; i += 2) {
+    	    if (t.length > 0) {
+		t += ", ";
+	    }
+	    t += arguments[i] + " = " + arguments[i + 1];
+	}
+	document.debug.log.value += t + "\n";
+    }
+// -->
+</script>
+
+<h3><a href="index.html">JavaScrypt Home Page</a></h3>
+
+<h3><a href="http://www.fourmilab.ch/">Fourmilab Home Page</a></h3>
+
+<p />
+<hr />
+<p />
+<table align="right">
+<tr><td align="center">
+    <a href="http://validator.w3.org/check?uri=referer"
+       target="FourmilabValidation"><img
+       src="http://www.fourmilab.ch/images/icons/valid-xhtml10.png"
+       alt="Valid XHTML 1.0" height="31" width="88"
+       border="0" /></a>
+</td></tr>
+</table>
+<address>
+by <a href="http://www.fourmilab.ch/">John Walker</a><br />
+December, 2005
+</address>
+<center>
+<em>This document is in the public domain.</em>
+</center>
+
+</body>
+</html>

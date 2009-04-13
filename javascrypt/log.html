@@ -1,0 +1,399 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>JavaScrypt Development Log</title>
+<style type="text/css">
+    body {
+        margin-left: 15%;
+        margin-right: 10%;
+	background-color: #FFFFFF;
+	color: #000000;
+    }
+</style>
+
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<meta name="keywords" content="javascrypt, browser, encryption, aes, advanced, system, javascript" />
+<meta name="description" content="JavaScrypt Development Log" />
+<meta name="author" content="John Walker" />
+<meta name="robots" content="index" />
+
+</head>
+
+<body>
+
+<h1>JavaScrypt Development Log</h1>
+
+<hr style="background-color: rgb(192, 192, 192); color: #000000;" />
+
+<p />
+
+<h3>2003 September 24</h3>
+
+<p>
+Modified <tt>formatPlaintext</tt> in <tt>aes.js</tt> to fill
+plaintext buffers that aren't an even number of 32 byte AES
+blocks with pseudorandom bytes from <tt>getRandomBytes</tt>
+rather than zeroes.
+</p>
+
+<p>
+Extracted the JavaScript code embedded in <tt>index.html</tt>
+into a new <tt>jscrypt.js</tt> module.  This will make it easier
+to programmatically assemble the "lean" version from the main file.
+</p>
+
+<p>
+Updated the <tt>Makefile</tt> to explicitly list the JavaScript
+modules included in the archive as opposed to including them with
+a wildcard specification.  This permits keeping the compressed
+JavaScript files for the lean version in the same directory without
+having them included in the archive.
+</p>
+
+<p>
+Added mark-up to <tt>index.html</tt> to denote those parts to be
+dropped when assembling the lean version.
+</p>
+
+<h3>2003 September 25</h3>
+
+<p>
+For some reason, on Mozilla 1.3/Linux, the "Key" edit line displayed
+in a larger Courier font in the lean version (but not the full
+version, which has no changes whatsoever which should affect the
+style of this box).  I removed "Courier" from the <tt>font-family</tt>
+and left it as "monospace", which appears to work everywhere.  No
+other browser had any problem with Courier as an alternative to
+monospace.
+</p>
+
+<h3>2003 September 27</h3>
+
+<p>
+Added the three ECB test cases from the NIST standard test set to
+the <tt>test.html</tt> testbed.  Each button plugs the key, plaintext,
+and ciphertext for the test in the corresponding boxes; you may then
+encrypt and decrypt to verify nothing changes.  Key size and block
+size are now sensed automatically based on the length of the hexadecimal
+value in the field.
+</p>
+
+<h3>2003 September 28</h3>
+
+<p>
+Integrated the <tt>pass_phrase.html</tt> and <tt>stego.html</tt> pages
+along with their supporting <tt>wordtab.js</tt> and <tt>stegodict.js</tt>
+files.  Added these files to the appropriate places in the <tt>Makefile</tt>.
+</p>
+
+<p>
+Added the ability to suppress the generation of headers and trailers in
+Base64 armour by setting <tt>base64addsent</tt> to <tt>false</tt> before
+calling <tt>armour_base64</tt> in <tt>armour.js</tt>.  This permits
+Stego to optionally suppress headers when it's being used to steganify
+a Base64 file belonging to another application.
+</p>
+
+<h3>2003 September 29</h3>
+
+<p>
+Added user-defined seed specification to <tt>pass_phrase.html</tt>.  If
+a pseudorandom seed is requested, its value is displayed in the
+user-defined seed field so it may be saved for subsequent use.
+</p>
+
+<h3>2003 November 15</h3>
+
+<p>
+Extracted the entropy collection logic from <tt>javascrypt.html</tt>
+and <tt>pass_phrase.html</tt> into a new <tt>entropy.js</tt> module.
+Added a new <tt>mouseMotionEntropy</tt> function which captures
+mouse motion events and collects a specified number of subsequent
+triples of screen X and Y co-ordinates (we use the absolute
+screen position as it is more entropic than position within
+the client window), and the time of the mouse movement.  This
+primes the entropy array with reasonably high quality data before
+most operations which require it.
+</p>
+
+<p>
+Modified <tt>jscrypt.js</tt> to use <tt>AESprng</tt> in
+<tt>aesprng.js</tt> to generate the initial vector for CBC
+encryption and pad to an even number of blocks (if required). 
+The AES-based pseudorandom generator is primed with a seed
+computed from the entropy vector.
+</p>
+
+<p>
+Updated <tt>aesprng_test.html</tt> to conform with the changes to initial
+vector generation.
+</p>
+
+<h3>2003 November 17</h3>
+
+<p>
+Increased the maximum length of the key in <tt>javascrypt.html</tt>
+and the seed in <tt>pass_phrase.html</tt> to 1024 characters,
+</p>
+
+<h3>2003 November 18</h3>
+
+<p>
+Replaced <tt>"./"</tt> link targets in references to the JavaScrypt
+home page with <tt>"index.html"</tt> so these links work correctly
+when referencing the pages from a <tt>file:</tt> URL on a machine
+to which the user has downloaded the pages.
+</p>
+
+<h3>2003 November 19</h3>
+
+<p>
+Modified <tt>aesprng_test.html</tt> to generate hexadecimal
+pseudorandom streams suitable for testing with
+<a href="http://www.fourmilab.ch/random/">ENT</a>, and
+rewrote the code which assembles the strings and stuffs them into
+the results dialogue box to run about a thousand times
+faster, avoiding JavaScript's (at least on Mozilla)
+exponential slowdown when appending large results to
+<tt>textarea</tt> value fields.
+</p>
+
+<h3>2003 November 20</h3>
+
+<p>
+Further cleaned up <tt>aesprng_test.html</tt> so it's
+comprehensible without reading the source code.  It now lets
+you specify the number of bytes to be generated and whether
+they're generated with the <tt>next</tt> or <tt>nextInt</tt>
+methods with HTML controls, shows the number of bytes when
+generated if the script is paused by an "unresponsive" warning,
+and lets you generate seeds just like <tt>pass_phrase.html</tt>
+does.  I also cleaned up the format of the output it generates
+so it look just like an "XD" output and no longer requires the
+"<tt>-s</tt>" option when converting to binary with XD. The
+<tt>aesprng_test.html</tt> being sufficiently civilised now, I
+included it in the source distribution.
+</p>
+
+<p>
+Added comments to the methods in <tt>aesprng.js</tt>.
+</p>
+
+<p>
+Added missing <tt>example.html</tt> description to
+<tt>distribution.html</tt>.
+</p>
+
+<h3>2003 November 21</h3>
+
+<p>
+Fixed truncation of warning message in <tt>index.html</tt>
+if JavaScript is not enabled.  I also added a gimmick so
+that the background of the JavaScript enabled field is pink
+if JavaScript isn't present and green if it is.
+</p>
+
+<p>
+Modified all Fourmilab links outside the JavaScrypt document tree
+to include an explicit "<tt>http://www.fourmilab.ch/</tt>".  This
+permits them to function even when the pages are accessed
+from a local copy via a <tt>file:</tt> URL.
+</p>
+
+<p>
+The welcome page, <tt>index.html</tt>, was needlessly including
+several JavaScript modules it never actually used.  I removed
+the script includes for them.
+</p>
+
+<h3>2003 November 27</h3>
+
+<p>
+Modified the <tt>nextInt</tt> methods in <tt>aesprng.js</tt>
+and <tt>lecuyer.js</tt> to avoid the bias which results from
+using a modulus to obtain a pseudorandom value with a range
+which isn't a power of two.  As explained in section 10.8 of
+Ferguson and Schneier's
+<cite><a href="http://www.amazon.com/exec/obidos/ASIN/0471223573/fourmilabwwwfour" target="Amazon_Fourmilab">Practical
+Cryptography</a></cite>,
+to avoid a bias toward smaller values, one must generate
+pseudorandom values between 0 and the next higher power of two
+minus one, then discard results which are out of range in order
+to preserve a uniform distribution within the requested range. 
+In <tt>aesprng.js</tt>, this fix has two additional salutary
+effects.  First of all, it reduces the number of raw bytes
+generated to the minimum required to produce the desired
+result range and, if the requested range is 0-255, produces
+identical results to those obtained by calling the
+<tt>next()</tt> method directly.
+</p>
+
+<h3>2003 November 29</h3>
+
+<p>
+As reported by Steven Wittens, <tt>jscrypt.js</tt> failed to handle
+plaintexts which contained Unicode characters greater than 0xFF.  The
+conversion of the plaintext string to the AES plaintext byte array
+simply truncated characters to 8 bits.  I added a new <tt>utf-8.js</tt>
+module which handles transformation between Unicode strings and
+<a href="http://www.ietf.org/rfc/rfc2279.txt" target="_blank">UTF-8</a>
+encoded byte streams.  Canonical transformation is implemented in
+the functions <tt>unicode_to_utf8</tt> and <tt>utf8_to_unicode</tt>,
+which take a string argument and return the encoded or decoded string.
+</p>
+
+<p>
+For use with JavaScrypt, the wrapper functions <tt>encode_utf8</tt> and
+<tt>decode_utf8</tt> are used to provide more efficient representation
+of the very common case of text which consists only of ASCII and Latin-1
+characters.  If its argument contains neither any characters with
+code points greater than or equal to 0xFF nor the character 0x9D
+(Unicode OPERATING SYSTEM COMMAND), <tt>encode_utf8</tt> is an
+identity transformation--the encoded string is identical to the input.
+Otherwise, <tt>encode_utf8</tt> returns a string which begins with the
+character 0x9D acting as a sentinel, followed by the UTF-8 encoding
+of the argument string.  The <tt>decode_utf8</tt> function checks for the presence
+of the 0x9D sentinel and decodes the balance of the argument string as
+UTF-8 or returns the argument unchanged accordingly.  Now, it might have
+been more logical to use one of the two Unicode PRIVATE USE control characters
+as the sentinels, but both of them are overloaded by characters in the
+regrettable "Windows-1252" character set.  Characters from that set
+have no business appearing in JavaScript strings, but you never know
+what somebody is going to paste into an HTML text box, so this choice
+keeps such text from being unnecessarily expanded to UTF-8.
+</p>
+
+<p>
+Both <tt>jscrypt.js</tt> and <tt>pass_phrase.html</tt> now apply
+<tt>encode_utf8</tt> to text keys and seeds.  This avoids the
+loss of information in upper bytes of characters greater than
+0x7F.  Since <tt>encode_utf8</tt> is an identity for strings without
+such characters, this change is upward compatible with any key or
+seed consisting entirely of ASCII and Latin-1 graphic characters.
+</p>
+
+<p>
+Added this development log to the Web directory, and provided a link
+from the main page.
+</p>
+
+<h3>2004 March 19</h3>
+
+<p>
+The "lean" version, <tt>jscrypt.html</tt> failed to embed the
+JavaScript code for <tt>utf-8.js</tt> because the program which
+does the embedding assumed file names consisted only of alphanumeric
+characters and failed to recognise the external script reference
+to that file.  I modified the embedding program accordingly and
+rebuilt <tt>jscrypt.html</tt> with it.  Earlier testing failed
+to reveal this problem which only manifested itself when
+the lean version was copied to a directory which did not contain
+<tt>utf-8.js</tt>.
+</p>
+
+<h3>2005 December 16</h3>
+
+<p>
+The <tt>formatPlaintext</tt> function in <tt>aes.js</tt> uses a
+heuristic instead of <tt>instanceof</tt> to decide whether its
+argument is a string (primitive or reference) or an array of bytes
+(numbers) in order to remain compatible with versions of Internet
+Explorer prior to 5.0 which did not implement <tt>instanceof</tt>. 
+Unfortunately, this trick ran afoul of changes to the JavaScript
+implementation in Mozilla Firefox 1.5.  After a bit of
+experimentation, I made the test even more tricky and complicated and
+it now seems to work on Firefox 1.5 as well as Firefox 1.0, Mozilla,
+Opera, Internet Explorer (although I have nothing older than 6.0) and
+Netscape 4.7 on SGI.
+</p>
+
+<p>
+The link for verifying the distribution signing key on KeyServer
+was broken due to a change in their domain name; fixed.
+</p>
+
+<p>
+Added <tt>content-type</tt> declarations of <tt>charset=iso-8859-1</tt>
+to all HTML documents and fixed most validation errors reported
+by the W3C HTML validator for 4.01 Transitional.  A few remain,
+however, so we're not claiming full compliance.  The problem
+is that without the <tt>wrap="off"</tt> attribute in a number of
+<tt>textarea</tt> fields, undesired line wrapping will occur.
+You're supposed to be able to control this with the CSS
+<tt>white-space:&nbsp;pre</tt> statement, but it doesn't seem
+to do anything inside a <tt>textarea</tt>, even in Firefox 1.5.
+So, there's no option but to leave the <tt>wrap</tt> in place,
+even though the validator complains about it.
+</p>
+
+<p>
+The HTML 4.01 compatibility fixes broke the Perl program which
+creates the "lean" version of the encryption/decryption page;
+fixed.
+</p>
+
+<h3>2005 December 24</h3>
+
+<p>
+Upgraded the following files for XHTML 1.0 syntax and validated
+them for compliance:
+<tt>aesprng_test.html</tt>,
+<tt>distribution.html</tt>,
+<tt>example.html</tt>,
+<tt>index.html</tt>,
+and <tt>log.html</tt>.
+</p>
+
+<h3>2005 December 25</h3>
+
+<p>
+Upgraded the following files for XHTML 1.0 syntax and validated
+them for compliance:
+<tt>javascrypt.html</tt>,
+<tt>pass_phrase.html</tt>,
+and <tt>stego.html</tt>.
+</p>
+
+<p>
+Removed <tt>wrap="off"</tt> attributes in
+<tt>&lt;textarea&gt;</tt> fields, as this is not an XHTML 1.0
+(or HTML 4.01) supported mode.  The CSS mode which is supposed to
+provide an equivalent doesn't work in current browsers, but
+in any case this is purely an aesthetic and presentation issue:
+wrapping of text within a <tt>textarea</tt> does not affect
+its processing.
+</p>
+
+<p>
+Modified the <tt>flense.pl</tt> Perl program used to build the <tt>jscrypt.html</tt>
+"lean" version of the encryption/decryption utility use XHTML "<tt>CDATA</tt>"
+quoting of embedded JavaScript code to avoid validation errors.  The XHTML quoting
+is commented out with JavaScript comments to avoid problems with older
+browsers.
+</p>
+
+<p />
+<hr />
+<p />
+<table align="right">
+<tr><td align="center">
+    <a href="http://validator.w3.org/check?uri=referer"
+       target="FourmilabValidation"><img
+       src="http://www.fourmilab.ch/images/icons/valid-xhtml10.png"
+       alt="Valid XHTML 1.0" height="31" width="88"
+       border="0" /></a>
+</td></tr>
+</table>
+<address>
+by <a href="http://www.fourmilab.ch/">John Walker</a><br />
+December, 2005
+</address>
+<center>
+<em>This document is in the public domain.</em>
+</center>
+
+<h3><a href="index.html">Back to JavaScrypt</a></h3>
+
+</body>
+</html>
