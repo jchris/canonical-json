@@ -19,14 +19,14 @@ function seed(s) {
   var x, y, t;
   Rs=[];
   Rsl=rSeed.length;
-  Sr= r(256)
-  Rbits=0
+  Sr= r(256);
+  Rbits=0;
 
   if(Rs.lengh==0) {for (x=0; x<256; x++) Rs[x]=x;}
-  y=0
+  y=0;
   for (x=0; x<256; x++) {
-    y=(rSeed[x] + s[x] + y) % 256
-    t=s[x]; s[x]=s[y]; s[y]=t
+    y=(rSeed[x] + s[x] + y) % 256;
+    t=s[x]; s[x]=s[y]; s[y]=t;
   }
   Rx=Ry=0;
   return Rsl;
@@ -69,96 +69,96 @@ function rand(n) {
   }
   if(r<0) r ^= 0x80000000;
   return r % n;
-}
+};
 
-tstval=[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+tstval=[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1];
 
 // functions for generating keys-----------------------------
 function bgcd(uu,vv) { // return greatest common divisor
   // algorythm from http://algo.inria.fr/banderier/Seminar/Vallee/index.html
-  var d, t, v=vv.concat(), u=uu.concat()
+  var d, t, v=vv.concat(), u=uu.concat();
   for(;;) {
-    d=bsub(v,u)
-    if(beq(d,[0])) return u
+    d=bsub(v,u);
+    if(beq(d,[0])) return u;
     if(d.length) {
       while((d[0] & 1) ==0)
-      d=brshift(d).a // v=(v-u)/2^val2(v-u)
-      v=d
+      d=brshift(d).a; // v=(v-u)/2^val2(v-u)
+      v=d;
     } else {
-      t=v; v=u; u=t // swap u and v
+      t=v; v=u; u=t; // swap u and v
     }
   }
 }
 
 function rnum(bits) {
-  var n,b=1,c=0
-  var a=[]
-  if(bits==0) bits=1
+  var n,b=1,c=0;
+  var a=[];
+  if(bits==0) bits=1;
   for(n=bits; n>0; n--) {
     if(rand(2)) {
-      a[c]|=b
+      a[c]|=b;
     }
-    b<<=1
+    b<<=1;
     if(b==bx2) {
-      b=1; c++
+      b=1; c++;
     }
   }
-  return a
-}
+  return a;
+};
 
 // function to generate keys
 function genkey(bits,f) {
-  timerStart()
-  bits=parseInt(bits)*8
-  var q,p,p1q1,n,factorMe,d,e,r
-  var c,cc,ccc,pq
-  q=mpp(bits); p=mpp(bits)
-  f.p.value=p; f.q.value=q
-  p1q1=bmul(bsub(p,[1]),bsub(q,[1]))
+  timerStart();
+  bits=parseInt(bits)*8;
+  var q,p,p1q1,n,factorMe,d,e,r;
+  var c,cc,ccc,pq;
+  q=mpp(bits); p=mpp(bits);
+  f.p.value=p; f.q.value=q;
+  p1q1=bmul(bsub(p,[1]),bsub(q,[1]));
   for(c=5; c<Primes.length; c++) {
-    e=[Primes[c]]
-    d=modinverse(e,p1q1)
-    if(d.length != 1 || d[0]!=0) break
+    e=[Primes[c]];
+    d=modinverse(e,p1q1);
+    if(d.length != 1 || d[0]!=0) break;
   }
-  f.d.value=d; f.e.value=e; f.pq.value=(pq=bmul(p,q))
+  f.d.value=d; f.e.value=e; f.pq.value=(pq=bmul(p,q));
   // test
-  timerStop()
-  c=bmod(tstval,pq)
-  cc=bmodexp(c,e,pq)
-  timerStart()
+  timerStop();
+  c=bmod(tstval,pq);
+  cc=bmodexp(c,e,pq);
+  timerStart();
   //cc1=bmodexp(cc,d,pq)
-  ccc=crt_RSA(cc,d,p,q)
-  timerStop()
-  return
+  ccc=crt_RSA(cc,d,p,q);
+  timerStop();
+  return;
 }
 function timerStart() {
   startTime=new Date();
 }
 function timerStop() {
   var endTime=new Date();
-  document.t.howLong2.value=document.t.howLong.value
+  document.t.howLong2.value=document.t.howLong.value;
   document.t.howLong.value=(endTime.getTime()-startTime.getTime())/1000.0;
 } 
 function parseArray(a) {
-  a=a.split(",")
+  a=a.split(",");
   for(var n=0; n<a.length; n++) {
-    a[n]=parseInt(a[n])
+    a[n]=parseInt(a[n]);
   }
-  return a
+  return a;
 }
 
 function enc(f) {
-  timerStart()
-  f.text.value=rsaEncode(parseArray(f.e.value),parseArray(f.pq.value),f.text.value)
-  timerStop()
+  timerStart();
+  f.text.value=rsaEncode(parseArray(f.e.value),parseArray(f.pq.value),f.text.value);
+  timerStop();
 }
 function dec(f) {
-  timerStart()
+  timerStart();
   f.text.value=rsaDecode([parseArray(f.d.value),
   parseArray(f.p.value),
   parseArray(f.q.value)],
-  f.text.value)
-  timerStop()
+  f.text.value);
+  timerStop();
 }
 
 
@@ -183,38 +183,38 @@ Primes=[3, 5, 7, 11, 13, 17, 19,
 829, 839, 853, 857, 859, 863, 877, 881,
 883, 887, 907, 911, 919, 929, 937, 941,
 947, 953, 967, 971, 977, 983, 991, 997,
-1009, 1013, 1019, 1021]
+1009, 1013, 1019, 1021];
 
 
-sieveSize=4000
-sieve0=-1* sieveSize
-sieve=[]
+sieveSize=4000;
+sieve0=-1* sieveSize;
+sieve=[];
 
-lastPrime=0
+lastPrime=0;
 function nextPrime(p) { // returns the next prime > p
-  var n
+  var n;
   if(p == Primes[lastPrime] && lastPrime <Primes.length-1) {
-    return Primes[++lastPrime]
+    return Primes[++lastPrime];
   }
   if(p<Primes[Primes.length-1]) {
     for(n=Primes.length-2; n>0; n--) {
       if(Primes[n] <= p) {
-        lastPrime=n+1
-        return Primes[n+1]
+        lastPrime=n+1;
+        return Primes[n+1];
       }
     }
   }
   // use sieve and find the next one
-  var pp,m
+  var pp,m;
   // start with p
-  p++; if((p & 1)==0) p++
+  p++; if((p & 1)==0) p++;
   for(;;) {
     // new sieve if p is outside of this sieve's range
     if(p-sieve0 > sieveSize || p < sieve0) {
       // start new sieve
-      for(n=sieveSize-1; n>=0; n--) sieve[n]=0
-      sieve0=p
-      primes=Primes.concat()
+      for(n=sieveSize-1; n>=0; n--) sieve[n]=0;
+      sieve0=p;
+      primes=Primes.concat();
     } 
 
     // next p if sieve hit
@@ -225,15 +225,15 @@ function nextPrime(p) { // returns the next prime > p
       // find a prime divisor
       for(n=0; n<primes.length; n++) {
         if((pp=primes[n]) && p % pp ==0) {
-          for(m=p-sieve0; m<sieveSize; m+=pp) sieve[m]=pp
+          for(m=p-sieve0; m<sieveSize; m+=pp) sieve[m]=pp;
           p+=2;
-          primes[n]=0
-          break
+          primes[n]=0;
+          break;
         }
       }
       if(n >= primes.length) {
         // possible prime
-        return p
+        return p;
       }
     } else {
       p+=2;
@@ -242,60 +242,60 @@ function nextPrime(p) { // returns the next prime > p
 
 }
 function divisable(n,max) { //return a factor if n is divisable by a prime less than max, else return 0
-  if((n[0] & 1) == 0) return 2
-  for(c=0; c<Primes.length; c++) {
-    if(Primes[c] >= max) return 0
-    if(simplemod(n,Primes[c])==0)
-    return Primes[c]
+  if ((n[0] & 1) == 0) return 2;
+  for (c=0; c<Primes.length; c++) {
+    if (Primes[c] >= max) return 0;
+    if (simplemod(n,Primes[c])==0)
+      return Primes[c];
   }
-  c=Primes[Primes.length-1]
+  c=Primes[Primes.length-1];
   for(;;) {
-    c=nextPrime(c)
-    if(c >= max) return 0
+    c=nextPrime(c);
+    if(c >= max) return 0;
     if(simplemod(n,c)==0)
-    return c
+      return c;
   }
 }
 function bPowOf2(pow) { // return a bigint
-  var r=[], n, m=Math.floor(pow/bs)
-  for(n=m-1; n>=0; n--) r[n]=0;
-  r[m]= 1<<(pow % bs)
-  return r
+  var r=[], n, m=Math.floor(pow/bs);
+  for (n=m-1; n>=0; n--) r[n]=0;
+  r[m]= 1<<(pow % bs);
+  return r;
 }
 function mpp(bits) { //returns a Maurer Provable Prime, see HAC chap 4 (c) CRC press
-  if(bits < 10) return [Primes[rand(Primes.length)]]
-  if(bits <=20) return [nextPrime(rand(1<<bits))]
-  var c=10, m=20, B=bits*bits/c, r, q, I, R, n, a, b, d, R2, nMinus1
+  if(bits < 10) return [Primes[rand(Primes.length)]];
+  if(bits <=20) return [nextPrime(rand(1<<bits))];
+  var c=10, m=20, B=bits*bits/c, r, q, I, R, n, a, b, d, R2, nMinus1;
   if(bits > m*2) {
     for(;;) {
-      r=Math.pow(2,Math.random()-1)
-      if(bits - r * bits > m) break
+      r=Math.pow(2,Math.random()-1);
+      if (bits - r * bits > m) break;
     }
   } else {
-    r=0.5
+    r=0.5;
   }
-  q=mpp(Math.floor(r*bits)+1)
-  I=bPowOf2(bits-2)
-  I=bdiv(I,q).q
-  Il=I.length
+  q=mpp(Math.floor(r*bits)+1);
+  I=bPowOf2(bits-2);
+  I=bdiv(I,q).q;
+  Il=I.length;
   for(;;) {
     // generate R => I < R < 2I
     R=[]; for(n=0; n<Il; n++) R[n]=rand(bx2);
     R[Il-1] %= I[Il-1]; R=bmod(R,I);
-    if(! R[0]) R[0]|=1 // must be greater or equal to 1
-    R=badd(R,I)
-    n=blshift(bmul(R,q),1) // 2Rq+1
-    n[0]|=1
+    if(! R[0]) R[0]|=1; // must be greater or equal to 1
+    R=badd(R,I);
+    n=blshift(bmul(R,q),1); // 2Rq+1
+    n[0]|=1;
     if(!divisable(n,B)) {
-      a=rnum(bits-1)
-      a[0]|=2 // must be greater than 2
-      nMinus1=bsub(n,[1])
-      var x=bmodexp(a,nMinus1,n)
+      a=rnum(bits-1);
+      a[0]|=2; // must be greater than 2
+      nMinus1=bsub(n,[1]);
+      var x=bmodexp(a,nMinus1,n);
       if(beq(x,[1])) {
-        R2=blshift(R,1)
-        b=bsub(bmodexp(a,R2,n),[1])
-        d=bgcd(b,n)
-        if(beq(d,[1])) return n
+        R2=blshift(R,1);
+        b=bsub(bmodexp(a,R2,n),[1]);
+        d=bgcd(b,n);
+        if(beq(d,[1])) return n;
       }
     }
   }
