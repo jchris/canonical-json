@@ -1,0 +1,338 @@
+<!doctype html public "-//w3c//dtd html 4.01 transitional//en">
+<html>
+<head>
+<title>How to create Network Bootable Images under Windows</title>
+<meta name="GENERATOR" content="Arachnophilia 4.0">
+<meta name="FORMATTER" content="Arachnophilia 4.0">
+</head>
+
+<body bgcolor="#ffffff" text="#000000" link="#0000ff" vlink="#800080" alink="#ff0000">
+
+<table width="95%" align=center bgcolor="#f8f8c8">
+<tr>
+<td align=left width="20%">&nbsp;</td>
+
+<td align=center width="60%">
+<h2 align=center><font color="#ff0000">
+How to create Network Bootable Images under Windows
+</font></h2>
+<p align=center>
+Copyright &copy; 2003 Herbert Hanewinkel, Neuried
+</p>
+</td>
+
+<td align=right width="20%">&nbsp;</td>
+</tr>
+
+<tr>
+<td colspan=3 align=right>
+<a href="remote-boot2.htm"><b>Next</b></a>
+</td>
+</tr>
+</table>
+
+<blockquote>
+
+<h3 align=center><a name="Overview"></a>Overview</h3>
+
+<p align=justify>
+Many people mailed me questions about network booting a PC using my
+<a href="http://www.hanewin.de">haneWIN DHCP Server</a>.
+This short guide should give you starting point and an example.
+</p>
+
+<p align=justify>
+You can not create a copy of your preferred OS in a file and
+hope that the BOOT-ROM in a client can download and understand it.
+As in the real world both parties must speak the same language (protocol)
+to understand each other.
+<br>
+But there is no common standard for remote booting a PC over a network. 
+It exists a least a commercial proposal called <b>PXE</b> and a public proposal 
+called <b>Netboot</b>.
+</p>
+
+<dl>
+<dt><b>PXE</b></dt>
+<dd>
+<p align=justify>
+The PXE specification was setup by Intel but is no longer supported by them.
+PXE implementations sometimes use non standard DHCP options and protocols 
+(Some PXE BOOT ROMs seem to require a special PXE server, a DHCP server running
+on another port). 
+</p>
+</dd>
+
+<dt><b>Netboot</b></dt>
+<dd>
+<p align=justify>
+There are two projects based on the Netboot specification: 
+Etherboot and Netboot itself.<br>
+Etherboot and Netboot differ only in the way a BOOT-ROM is created.
+</p>
+</dd>
+</dl>
+<p align=justify>
+Because the remote boot solutions are targeted for creating diskless
+Unix clients, the solutions require an Unix OS for creating the
+boot images. This makes sense for remote booting Linux, FreeBSD, ...
+but not for remote booting a DOS client from Windows.
+</p>
+
+<p align=justify>
+This step-by-step guide is an example of how to create a network bootable DOS image 
+using the Etherboot solution. It does not require an unix system for 
+creating the boot image.
+For details about the Etherboot/Netboot specification and the mknbi tools
+please read the documentation of the <b>mknbi</b> software and visit the
+<a href="http://www.etherboot.org">Etherboot</a> web site.
+</p>
+
+<blockquote>
+<div style="background-color:#e0e0e0">
+<p align=justify>
+Remote booting Windows is NOT as easy because there is no network file system
+that can be easily used during the booting process for accessing and loading
+further files from a network file server.<br>
+<b>Qualystem LiteNET PC</b> offered a solution to boot a Windows 9x diskless 
+client from a Windows server.
+It is based on loading a realmode NDIS2 driver, making networking
+available before Windows is loaded. The client needs a PXE BOOT ROM or floppy.
+</p>
+<p>
+If you find some interesting links about remote booting solutions let me know.
+</p>
+</div>
+</blockquote>
+
+<p>
+If you have an ethernet card supporting PXE you can make use of Etherboot as well.
+With the Etherboot BOOT-ROM code available from ROM-O-MATIC as PXE download image,
+you can setup a two stage boot loader.
+<ol>
+<li>The PXE code in ROM downloads the Etherboot ROM code for your network card
+    in PXE format.</li>
+<li>The Etherboot code is executed in RAM and downloads the desired
+    Etherboot OS image.</li>
+</ol>
+The boot file is selected by the DHCP server based on a vendor class identifier.
+The PXE ROM code includes the vendor class identifier "PXEClient" and
+the Etherboot code includes the vendor class identifier "Etherboot".</p>
+
+<hr>
+<h3 align=center><a name="Requirements"></a>Requirements</h3>
+
+<p>
+The Etherboot/Netboot solution normally uses Linux for preparing the images,
+but with a few modifications <b>mknbi</b> can run under Windows as well. You need:
+
+<ul>
+<li>a PC with a network card that has a BOOT-ROM socket.<br>
+    For testing the ROM code, BOOT-ROM emulations on a floppy disk are available.</li>
+<li>a DHCP and TFTP server for Windows.
+    The <a href="http://www.hanewin.de">haneWIN DHCP Server</a> for Windows has a
+    built-in TFTP server. No extra TFTP server is required</li>
+<li>to generate the Etherboot image you need Perl for Windows.
+    I use ActivePerl build 517 from <a href="http://www.ActiveState.com">ActiveState</a>
+    under Windows 98 and Windows XP.</li>
+<li>the modified Etherboot <b>mknbi</b> tools and fdimage.exe from this
+    <a href="remote-boot.zip">zip archive</a>
+    for creating Etherboot images under Windows.</li>
+</ul>
+</p>
+
+<hr>
+<h3 align=center><a name=""></a>Creating bootable images</h3>
+
+<p align=justify>
+Etherboot and Netboot use the same specification for remote booting. They
+differ only in the way a BOOT-ROM is created.
+<p>
+
+<p align=justify>
+Netboot:<br>
+More or less all ethernet cards are delivered with a DOS PacketDriver.<br>
+Netboot uses this PacketDriver to give you a chance to create a BOOT-ROM even
+for an exotic network card. While it sounds fine in the first moment, at a closer
+look a problem shows up. PacketDrivers of modern network cards are really
+huge and even using data compression it is hard to get the size of the ROM code
+including the PacketDriver below the standard BOOT-ROM size of 32K.<br>
+Therefore I prefer Etherboot.
+</p>
+
+<p align=justify>
+Etherboot:<br>
+Etherboot uses ethernet drivers available for Linux and because of
+ROM-O-MATIC it is very easy to get a BOOT-ROM for an ethernet card.
+Exotic networks cards may be not supported, but it is easier, faster and
+cheaper to replace the network card than to build your own BOOT-ROM.
+</p>
+
+<dl>
+<dt><b>Step 1</b>: The BOOT-ROM code</dt>
+
+<dd>
+<p align=justify>
+For testing the ROM code with your network card ROM-O-MATIC provides a BOOT-ROM
+emulation on floppy disk. I recommend to use this feature for testing
+your configuration.
+</p>
+
+<p align=justify>
+Go to the <a href="http://rom-o-matic.net">ROM-O-MATIC</a> web site to generate
+and download the floppy disk emulation of a BOOT-ROM  for your network card.
+(Extension: zdsk)<br>
+For the following DOS example you don't need to set any ROM options offered by
+ROM-O-MATIC. But if you want to boot e.g. FreeBSD later using the same BOOT-ROM 
+goto the options page and set the appropriate option.
+Setting options will increase the size of the BOOT-ROM, therefore make sure
+the resulting ROM code fits in a supported ROM size of your ethernet card.
+</p>
+
+<p align=justify>
+If you start with the floppy disk emulation copy the BOOT-ROM image to a floppy disk:
+</p>
+<p align=justify>
+<tt>
+fdimage -f 1.44M xyz.zdsk a:
+</tt>
+</p>
+
+<p align=justify>
+Test the ROM code with your network card.
+e.g. try to boot the floppy with the ROM code.<br>
+<b>Loading ROM image...</b> should appear on the top of screen
+and the PC should start sending out DHCP requests.
+If the computer fails to execute the ROM code, the ROM image is not
+appropriate for your network card.
+</p>
+</dd>
+
+<dt><b>Step 2</b>: Create a bootable DOS image</dt>
+<dd>
+<p align=justify>
+<ul>
+<li>Create a bootable DOS or <a href="http://www.freedos.org">FreeDOS</a>
+    floppy disk.</li>
+<li>As long as you have space you can add any program you like
+    to the disk.</li>
+<li>Copy the whole floppy disk to an image file:
+<p><tt>
+fdimage -f 1.44M a: image.a
+</tt></p>
+</p>
+<p align=justify>
+This requires my modified fdimage.exe or you can use the enhanced
+diskcopy.exe from FreeDOS.
+</li>
+</ul>
+</p>
+</dd>
+
+<dt><b>Step 3</b>: Create an Etherboot image</dt>
+<dd>
+<p align=justify>
+The perl script <b>mknbi.pl</b> converts the disk image into a bootable
+etherboot image. mknbi-1.4.1-win is a modified version of mknbi-1.4.1 to
+get it running under ActivePerl on Windows.
+There is no need to recompile the mknbi software. If you want to recompile
+the sources of the header files you must install the mknbi software
+under Linux or FreeBSD.
+</p>
+<p align=justify>
+This step differs for MSDOS and FreeDOS:
+</p>
+<p align=justify>
+for <b>FreeDOS</b>:
+<p>
+<tt>copy a:kernel.sys
+<br>
+cd mknbi-1.4.1-win
+<br>
+mknbi.pl --format=nbi --target=fdos ..\kernel.sys ..\image.a &gt;..\dos.bin
+<br>
+cd ..
+</tt>
+</p>
+for <b>MSDOS</b>:
+<p>
+<tt>cd mknbi-1.4.1-win
+<br>
+mknbi.pl --format=nbi --target=dos ..\image.dos &gt;..\dos.bin
+<br>cd ..
+</tt>
+</p>
+<p>
+I created <b>mkimage.bat</b> for the command sequence.
+</p>
+</dd>
+
+<dt><b>Step 4</b>: Setup of DHCP Server</dt>
+
+<dd>
+<p align=justify>
+<ul>
+	<li> Install and start the haneWIN DHCP server.</li>
+	<li> Copy the created Etherboot image <b>dos.bin</b> to the TFTP servers
+      root directory and enable the TFTP server.</li> 
+	<li> Set up a configuration profile for your client(s).
+	     You must at least specify an IP address range for the clients
+	     or use a static entry for the client.</li>
+	<li> In the <b>Boot</b> tab of the configuration profile specify the name
+      <b>dos.bin</b> as the boot file name for your client.</li>
+</ul>
+</p>
+</dd>
+<dt><b>Step 5</b>: Boot the client</dt>
+<dd>
+<p align=justify>
+The client should remote boot by downloading the image in a
+RAM disk and start DOS from the RAM disk.
+</p>
+</dd>
+<dt><b>Step 6</b>: For PXE clients, get the PXE code</dt>
+<dd>
+<p align=justify>
+Go to the <a href="http://rom-o-matic.net">ROM-O-MATIC</a> web site to generate
+and download a PXE image of the BOOT-ROM for your network card. (Extension: zpxe)<br>
+</p>
+
+<p align=justify>
+<ul>
+	<li> Copy the downloaded image xyz.<b>zpxe</b> to the TFTP servers
+      root directory.</li> 
+	<li> In the <b>Boot</b> tab of the configuration profile specify the name
+      xyz.<b>zpxe</b> as the alternate boot file name if the Vendor Class Id
+      matches "PXEClient"</li>
+</ul>
+</p>
+</dd>
+
+<dt><b>Step 7</b>: For non PXE clients, create a BOOT-ROM:</dt>
+<dd>
+<p align=justify>
+Go to the <a href="http://rom-o-matic.net">ROM-O-MATIC</a> web site to generate
+and download the binary BOOT-ROM code for your network card.
+Copy it on a EPROM or EEPROM for your network card.<br>
+</p>
+</dd>
+</dl>
+</blockquote>
+
+<table width="95%" align=center bgcolor="#f8f8c8">
+<tr>
+<td align=right>
+<a href="remote-boot2.htm"><b>Next</b></a>
+</td>
+</tr></table>
+
+<hr align=center width="95%">
+<table width="95%" align=center><tr>
+<td><font size="-1"><i>www.hanewin.de</i></font></td>
+<td align=right><font size="-1"><i>
+<a href="http://www.hanewin.de/home-e.htm" target="_top">Home</a>
+</i></font></td>
+</tr></table>
+</body>
+
+</html>

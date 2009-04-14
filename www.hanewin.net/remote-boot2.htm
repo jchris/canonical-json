@@ -1,0 +1,130 @@
+<!doctype html public "-//w3c//dtd html 4.01 transitional//en">
+<html>
+<head>
+<title>Net booting from a disk</title>
+<meta name="FORMATTER" content="Arachnophilia 4.0">
+</head>
+
+<body bgcolor="#ffffff" text="#000000" link="#0000ff" vlink="#800080" alink="#ff0000">
+
+<table width="95%" align=center bgcolor="#f8f8c8">
+<tr>
+<td align=left width=20%>&nbsp;</td>
+
+<td align=center width="60%">
+<h2 align=center><font color="#ff0000">
+How to net boot from a small/flash disk
+</font></h2>
+<p align=center>
+Copyright &copy; 2003 Herbert Hanewinkel, Neuried
+</p>
+</td>
+
+<td align=right width=20%>&nbsp;</td>
+</tr>
+
+<tr>
+<td colspan=3 align=left>
+<a href="remote-boot.htm"><b>Previous</b></a>
+</td>
+</tr>
+</table>
+
+<blockquote>
+
+<p align=justify>
+I had a DIMM PC board from <a href="http://www.jumptec.de">Jumtpec</a> with ethernet,
+floppy and a 16MB flask disk but without code for net booting in BIOS-ROM.
+With a .zdsk image from ROM-O-MATIC for the ethernet chip net boot worked fine from a
+floppy disk, but I wanted to avoid using a floppy for booting.
+</p>
+
+
+<ol>
+<li>
+<p align=justify>
+The .com image available from ROM-O-MATIC seemed to be the solution for my problem.
+<br>
+I had DOS already installed on the flash disk and tried to run the .com image from autostart.bat
+The system crashed at random soon after starting the .com image. This happened even
+with an empty config.sys.
+<br>
+Checking the source code of the .com image header I no longer believe that it ever works.
+At the time the .com image executes DOS has hooked on the timer interrupt and some
+other BIOS interrupts. But the Etherboot ROM code is not a DOS program,
+it writes to fixed addresses in RAM overiding/destroying DOS.
+Restoring the BIOS timer interrupt before executing the ROM code improved the situation.
+The Etherboot code completed  the download of the boot image, but crashed on executing it.
+<br>
+I gave up on it and can only recommend
+<h4 align=center>Don't waste your time with a .com image from ROM-O-MATIC.</h4>
+</p>
+</li>
+
+<li>
+<p align=justify>
+The boot code of the .zdsk image doesn't work from a hardisk.<br>
+The .com code fails.<br>
+How to solve the problem?
+</p>
+<p align=justify>
+Searching for another solution I found the boot1a.S module from Luigi Rizzo
+in the Etherboot source tree.  A boot code that can boot a floppy as well as
+a hard disk.
+<br>
+It compiled fine on my FreeBSD system and ... it crashed.
+<br>
+The directive to copy it in front of the .zrom code is wrong!!!
+<br> 
+The .zrom images have a header as well and boot1a must be followed by
+the Etherboot ROM code without any header.
+</p>
+The solution is to replace the boot code (first 512 bytes) at the beginning
+of the zdsk image with the boot code from boot1a.
+</li>
+</ol>
+</p>
+<hr align=center width=50%>
+My steps:
+<ul>
+<li>I created two partitions on the flash disk, a normal DOS partition and
+    a small empty partition. I set the partition type for the second partition
+    to type 0x1f as explained below.</li>
+<li>On the DOS partition I installed a standard DOS system.</li>
+<li>I copied the .zdsk image to the empty partition.</li>
+<li>I replaced the boot block of the partition with the boot1a code.<br>
+    Luigi Rizzo had choosen 1 for the partition type in his boot1a code.
+    Because this declares the partition as a type "primary FAT12" partition
+    I modified it (symbol BSD_PRT) to 0x1f to avoided conflicts with the primary
+    DOS partition on the flash disk.</li>
+<li>I installed a bootmanager (Booteasy from FreeBSD) in the master boot record
+    and made the second partition the active partition.</li>
+</ul>
+
+The result:
+<ul>
+<li>The DIMM PC can boot automatically over the net.</li>
+<li>The floppy drive is no longer required for net booting.</li>
+<li>The flash disk is still available for a local (bootable) DOS system.</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+
+<table width="95%" align=center bgcolor="#f8f8c8">
+<tr>
+<td align=left>
+<a href="remote-boot.htm"><b>Previous</b></a>
+</td>
+</tr></table>
+
+<hr align=center width="95%">
+<table width="95%" align=center><tr>
+<td><font size="-1"><i>www.hanewin.de</i></font></td>
+<td align=right><font size="-1"><i>
+<a href="http://www.hanewin.de/home-e.htm" target="_top">Home</a>
+</i></font></td>
+</tr></table>
+</body>
+
+</html>

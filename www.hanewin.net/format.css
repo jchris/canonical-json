@@ -1,0 +1,33 @@
+h2 {font-size:18pt}
+h3 {font-size:16pt}
+h4 {font-size:14pt}
+
+span.slogo {text-decoration:none;font-size:12pt;color:blue;font-family:Times,"Times New Roman";}
+span.logo  {text-decoration:none;font-size:14pt;color:blue;font-family:Times,"Times New Roman";}
+
+span.normal {font-size:12pt; font-family:Times,"Times New Roman";}
+span.small  {text-decoration:none;font-size:8pt;color=blue;font-family:Verdana,Geneva,Arial,Helvetica,sans-serif;}
+
+h2.hlogo  {font-family:Times,"Times New Roman";}
+
+p.small   {font-size:10pt; font-family:Times,"Times New Roman";}
+
+div.small {font-size:10pt; font-family:Times,"Times New Roman";}
+div.text  {font-size:8pt; font-family:Verdana,Geneva,Arial,Helvetica,sans-serif;}
+
+td.normal {font-size:12pt; font-family:Times,"Times New Roman";}
+td.small  {font-size:10pt; font-family:Times,"Times New Roman";}
+td.head  {font-size:10pt; font-family:Verdana,Geneva,Arial,Helvetica,sans-serif;}
+td.title  {font-size:8pt; font-family:Verdana,Geneva,Arial,Helvetica,sans-serif;}
+
+a.blind:link    {color:#0000FF; text-decoration:none;}
+a.blind:visited {color:#0000FF; text-decoration:none;}
+a.blind:hover   {color:#0000FF; text-decoration:none;}
+
+.round_lt	{ background: url("http://www.hanewin.de/img/round_lt.gif") top left no-repeat; }
+.round_rt	{ background: url("http://www.hanewin.de/img/round_rt.gif") top right no-repeat; }
+.round_lb	{ background: url("http://www.hanewin.de/img/round_lb.gif") bottom left no-repeat; }
+.round_rb	{ background: url("http://www.hanewin.de/img/round_rb.gif") bottom right no-repeat; }
+.round_grey_std	{ background-color: #F0F0F0; margin: 0px; padding: 0px }
+.round_std	{ padding: 3px; }
+

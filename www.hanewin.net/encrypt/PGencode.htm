@@ -1,0 +1,125 @@
+<!doctype HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+ <meta http-equiv="content-type" content="text/html; charset=iso-8859-1">
+ <meta name="resource-type" content="document">
+ <meta name="author" content="Herbert Hanewinkel">
+ <meta name="keywords" content="OpenPGP, GnuPG, PGP, RSA, AES, Rijndael, public key encryption">
+ <meta name="keywords" content="PKI, Javascript, RFC 2440">
+ <meta name="keywords" content="mail encryption">
+<title>OpenPGP Message Encryption in JavaScript Demo</title>
+
+<script language="Javascript" src="rsa.js" type="text/javascript"></script>
+<script language="Javascript" src="aes-enc.js" type="text/javascript"></script>
+<script language="Javascript" src="base64.js" type="text/javascript"></script>
+<script language="Javascript" src="mouse.js" type="text/javascript"></script>
+<script language="Javascript" src="PGencode.js" type="text/javascript"></script>
+
+<script language="Javascript" type="text/javascript">
+
+var keytyp = 0;      // 0=RSA, 1=Elgamal
+var keyid = '02044b001cd7a551';
+var pubkey = 'BADelitpUqMZLn+bryZR5rK9J3eu+pRVFP5tpboOlIwO2vqO/rCi8VvT2TPzEJarWhyZ465NIohYCiia9vaGUEp4rsDzFnVNgpON47yPew1zCmOOofituf+X6Qlaxylm5NnO4vnRcmoF4IbGwSCqyGgGor29D75Hovwlj1q6BWHYWwAGKQ==';
+
+function load()
+{
+ document.t.pkey.value=pubkey;
+ document.t.keyid.value=keyid;
+ if(keytyp == 0) document.t.pktype.value='RSA';
+ if(keytyp == 1) document.t.pktype.value='ELGAMAL';
+}
+
+function encrypt()
+{
+ pubkey=document.t.pkey.value;
+
+ if(document.t.keyid.value.length) keyid=document.t.keyid.value;
+ else                              keyid='0000000000000000';
+ if(keyid.length != 16)
+ {
+   alert('Invalid Key Id');
+   return;
+ } 
+ 
+ keytyp = -1;
+ if(document.t.pktype.value == 'ELGAMAL') keytyp = 1;
+ if(document.t.pktype.value == 'RSA')     keytyp = 0;
+ if(keytyp == -1)
+ {
+   alert('Unsupported Key Type');
+   return;
+ } 
+
+
+ var startTime=new Date();
+
+ var text=document.t.text.value+'\r\n';
+ document.t.text.value=doEncrypt(keyid, keytyp, pubkey, text);
+
+ var endTime=new Date();
+ document.t.howLong.value=(endTime.getTime()-startTime.getTime())/1000.0;
+}
+
+</script>
+</head>
+
+<body bgcolor="#d0d0d0" onload="load()">
+
+<h2 align=center>OpenPGP Message Encryption in JavaScript Demo</h2>
+<center><font size="-1">&copy; 2005 Herbert Hanewinkel</font></center>
+<hr>
+<center>
+[<a href="PGpubkey.htm">OpenPGP Key extraction</a>][OpenPGP Encryption]
+</center>
+<ul>
+<li>The message is encrypted with the AES algorithm using a random session key.
+    The public key is used by the RSA/Elgamal algorithm to encrypt the session key.
+    Use the PGP public key extraction page to extract the public key from a PGP
+    public key block and paste it below.
+    (The key shown on start of this page is my public key.)
+</li>
+<li>The Key ID is added to the encrypted message to identify the public key used in encryption.<br>
+    GnuPG tries all local avaliable secret keys matching the public key algorithm for decryption,
+    if the key ID is all 8 bytes zero.<br>
+    Other software may need the key ID for decryption.</li>
+</ul>
+<form name=t action="javascript:encrypt()">
+<table align=center>
+
+<tr><td>Public Key of receiver(MPI in base64):</td></tr>
+
+<tr><td colspan=2>
+&nbsp;&nbsp;<input size=100 name="pkey"></td></tr>
+
+<tr><td>Key Type of Public Key:</td>
+<td><select size=1 name="pktype">
+<option value='RSA'>RSA</option>
+<option value='ELGAMAL'>Elgamal</option></select></td></tr>
+
+<tr><td>Key ID of Public Key (8 bytes in hex):</td>
+<td><input size=40 name="keyid"></td></tr>
+
+<tr><td>&nbsp</td></tr>
+
+<tr>
+<td>Enter your message for encryption:</td>
+</tr>
+<tr>
+<td width="100%" colspan=2><textarea name="text" rows=16 cols=80>your secret text goes here</textarea></td>
+</tr>
+
+<tr>
+<td align=left><input type=submit value="Encrypt Message"></td>
+<td align=right>This took <input size=4 name="howLong"> seconds</td>
+</tr>
+</table>
+</form>
+
+<hr align=center width="99%">
+<table width="100%"><tr>
+<td><font size="-1"><i>www.haneWIN.net</i></font></td>
+<td align=right><font size="-1"><i>
+<a href="http://www.hanewin.net" target="_top">Home</a>
+</i></font></td>
+</tr></table>
+</body>

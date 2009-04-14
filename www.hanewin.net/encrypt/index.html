@@ -1,0 +1,201 @@
+<!doctype HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+ <meta http-equiv="content-type" content="text/html; charset=iso-8859-1">
+ <meta name="resource-type" content="document">
+ <meta name="author" content="Herbert Hanewinkel">
+ <meta name="keywords" content="OpenPGP, GnuPG, GPG, PGP, RSA, AES, Rijndael, public key encryption">
+ <meta name="keywords" content="PKI, Javascript, RFC 2440">
+ <meta name="keywords" content="mail encryption">
+ <title>PGP / GnuPG/ Open PGP Message Encryption in JavaScript</title>
+</head>
+
+<body bgcolor="#ffffff" text="#000000" link="#0000ff" vlink="#800080" alink="#ff0000">
+
+<table width="95%" align=center bgcolor="#f8f8c8">
+<tr>
+<td align=left width="20%">&nbsp;</td>
+
+<td align=center width="60%">
+<h2 align=center><font color="#ff0000">
+PGP / GnuPG / OpenPGP Message Encryption in JavaScript
+</font></h2>
+<p align=center>
+&copy; 2005, Herbert Hanewinkel, Neuried
+</p>
+</td>
+
+<td align=right width="20%">&nbsp;</td>
+</tr>
+</table>
+
+<blockquote>
+<h3>Why encryption in Javascript?</h3>
+
+<p><b>For securing web forms with public key encryption.</b></p>
+<p align=justify>
+Public key encryption in Javascript encrypts form data at the client side
+for the whole transfer from sender to the final receiver.
+Form data can be transferred without using an SSL connection and is
+stored encrypted on the server. Only the final receiver can decrypt it. 
+</p>
+
+<h3>How to integrate it with existing PKI?</h3>
+
+<p align=justify>There are other pages about encryption in Javascript.
+All these pages demonstrate how encryption/decryption could be done in Javascript.
+<ul>
+<li>They use Javascript forms for encryption and decryption.</li>
+<li>Many sites use small key sizes for demonstrating the public key encryption only.</li>
+<li>Because of the slow performance on decryption in Javascript, they propose
+server side decoders in other languages,<br>
+e.g. <a href="http://shop-js.sourceforge.net">shop-js.sourceforge.net</a></li>
+<li>a special mail reader with decryption software in Java,
+e.g. <a href="http://mysite.mweb.co.za/residents/c.meijer/mmusing.htm">
+Ernest Hammingweight's MeringueMail</a></li>
+</ul>
+</p>
+
+<p align=justify>
+How to secure form data <b>without</b> any "special" processing software for decryption
+using standard keys sizes (&gt;= 1024 bits)?
+<br>
+My provider offers a CGI program formmail.pl to forward form data as mail, a
+solution that is offered by most providers.
+<br>
+The idea:
+<ul>
+<li>Create an OpenPGP encrypted and ASCII armored message from form data in Javascript.</li>
+<li>The CGI program formmail.pl forwards the encrypted contents as mail.</li>
+<li>The mail is automatically decrypted by the receiver using a GnuPG/PGP mail plugin.</li>
+</ul>
+Encryption could be done automatically and hidden before transmission.<br>
+Decryption is done automatically by a GnuPG mail plugin for your favorite mail client.
+</p>
+
+<p align=justify>
+The OpenPGP message format is described in RFC 2440 and implemented in the 
+<a href="http://www.gnupg.org">GnuPG software.</a>
+PGP message encryption is based on  symmetric encryption of a message using
+a random session key and public key encryption of the session key.
+</p>
+
+<p align=justify>
+Today's mail encryption standards recommend to use MIME for marking encrypted
+contents, but the "old" ASCII armored inline message format of PGP is well
+suited for encryption of form data in Javascript.
+</p>
+
+<p align=justify>
+OpenPGP supports RSA as one of the public key encryption algorithms.
+John Hanna implemented a RSA/RC4 encryption scheme in Javascript for a client
+based Webshop. RC4 was choosen by John Hanna for symmetric encryption because
+RC4 is fast and small in code size. But RC4 is not supported by OpenPGP.
+For symmetric encryption of a message one of the OpenPGP supported algorithms
+was needed. I used Fritz Schneider's AES (Rijndael) reference implementation
+as a first choice, but the performance was very poor compared to RC4.
+Porting the optimized GnuPG C implemenation of AES to Javascript improved the situation.
+</p>
+
+<h3>My solution: OpenPGP Message Encryption in Javascript</h3>
+<p align=justify>
+<ul>
+<li><a href="PGencode.htm">OpenPGP Encryption in Javascript Demo</a></li>
+</ul>
+</p>
+<p align=justify>
+My <a href="http://www.hanewin.de/contact.htm">contact form</a>
+offers encryption for sending me confidental messages.
+It is coded to use my PGP 1024 bit RSA public key. 
+</p>
+<p align=justify>
+My <a href="http://www.hanewin.net/encrypt/PGcrypt.htm">PGP Encryption Service</a>
+enables you to PGP/GPG encrypt a message for a receiver as a web based service.
+It is complety implemented in Javascript code, executed in your local browser and
+readable for verifcation.
+</p>
+
+<h3>The Javascript Sources:</h3>
+<p align=justify>
+<ul>
+<li><a href="rsa.js">rsa.js</a> -- RSA encryption/decryption<br>
+    (modified version of John Hanna's RSA implementation,
+    the fastet RSA encryption in Javascript I could find).</li>
+<li><a href="aes-enc.js">aes-enc.js</a> -- AES encryption.</li>
+<li><a href="mouse.js">mouse.js</a> -- entropy collection from mouse motion and key press timing.</li>
+<li><a href="PGencode.js">PGencode.js</a> -- OpenPGP message encoding.</li>
+<li><a href="base64.js">base64.js</a> -- OpenPGP radix-64 encoding.</li>
+</ul>
+<p align=justify>
+Additional routines:
+<ul>
+<li><a href="PGpubkey.js">PGpubkey.js</a> -- RSA/Elgamal public key extraction from a PGP public key block.</li>
+<li><a href="sha1.js">sha1.js</a> -- SHA-1 implementation from Paul Johnston for OpenPGP Version 4 key ID calculation.</li>
+</ul>
+</p>
+
+<h3>How the algorithms work:</h3>
+<p align=justify>
+There are other pages about the mathematical background of public key encryption and AES.
+The two links below don't give a description of RSA, Elgamal or AES algorithm itself, but
+they show how the two encryption parts of the Javascript implementation work.
+My OpenPGP message encryption is based on these Javascript routines:
+<ul>
+<li><a href="rsa/rsa.htm">RSA public key encryption demo</a></li>
+<li><a href="aes/aes.htm">AES symmetric encryption demo</a></li>
+</ul>
+</p>
+
+<h3>Is it secure?</h3>
+<p align=justify>
+<dl>
+<dt><b>yes</b>
+<dd>
+The software encrypts form data at the client before transmission using strong
+public key encryption. An encrypted message is secured at the todays level provided by
+an RSA or Elgamal 1024 bit key, e.g. decryption of a single message will need a few month.
+</dd>
+<dt><b>no</b></dt>
+<dd>
+Javascript code and public key of the receiver are transferred unencrypted from
+server to client and therefore could be modified on the fly by a third person.
+A person getting access to your server can modify Javascript code and public key
+of the receiver.
+</dd>
+</dl>
+</p>
+
+<h3>References &amp; Links:</h3>
+
+<p align=justify>
+There are many links about encryption and Javascript. Links explaining and demonstrating
+RSA public key encryption using small numbers, ... 
+Here a few links that I found useful for implementing my solution.
+<ul>
+<li><a href="http://www.faqs.org/rfcs/rfc2440.html">RFC 2440: OpenPGP message format</a></li>
+<li><a href="http://www.gnupg.org">Gnu Privacy Guard</a></li>
+<li><a href="http://shop-js.sourceforge.net">John Hanna's Javascript Shopping & Crypto System</a></li>
+<li><a href="http://www-cse.ucsd.edu/~fritz/rijndael.html">Fritz Schneider's Rijndael reference implementation</a></li>
+<li><a href="http://mysite.mweb.co.za/residents/c.meijer/mmusing.htm">
+Ernest Hammingweight's MeringueMail</a></li>
+<li><a href="http://pajhome.org.uk">Paj's Home: Cryptography: JavaScript SHA-1, MD5, ...</a></li>
+<li><a href="http://www.fourmilab.ch/javascrypt">John Walker's Browser-Based Cryptography Tools</a></li></ul>
+</p>
+
+<h3>Support:</h3>
+<p>
+If you have questions regarding the software, send me a mail.<br>
+Please note that I can not answer requests about encryption in general.
+</p>
+
+</blockquote>
+
+<hr align=center width="95%">
+<table width="95%" align=center><tr>
+<td><font size="-1"><i>www.haneWIN.net</i></font></td>
+<td align=right><font size="-1"><i>
+<a href="http://www.hanewin.net" target="_top">Home</a>
+</i></font></td>
+</tr></table>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!doctype HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>AES (Rijndael) Encryption Test in JavaScript</title>
+<script src="aes-enc.js" type="text/javascript" language="JavaScript"></script>
+<script src="aes-dec.js" type="text/javascript" language="JavaScript"></script>
+<script src="aes-test.js" type="text/javascript" language="JavaScript"></script>
+
+<script type="text/javascript" language="JavaScript"><!--
+
+function doEncryption()
+{
+  var pt, key;
+  var theForm = document.forms[0];
+  blockSizeInBits=128;
+  keySizeInBits = theForm.keySize[theForm.keySize.selectedIndex].value;
+
+  if (theForm.key.value.toLowerCase().indexOf("0x") == 0)
+    theForm.key.value = theForm.key.value.substring(2);
+  if (theForm.plaintext.value.toLowerCase().indexOf("0x") == 0)
+    theForm.plaintext.value = theForm.plaintext.value.substring(2);
+  
+  if (theForm.key.value.length*4 != keySizeInBits) {
+    alert("For a " + keySizeInBits + " bit key, the hex string needs to be " +
+          (keySizeInBits / 4) + " hex characters long."+theForm.key.value.length);
+    if (theForm.key.select)
+       theForm.key.select();
+    return;
+  }
+
+  if (theForm.plaintext.value.length*4 != blockSizeInBits) {
+    alert("For a " + blockSizeInBits + " bit block, the hex plaintext string needs to be " +
+          (blockSizeInBits / 4) + " hex characters long.");
+    if (theForm.plaintext.select)
+       theForm.plaintext.select();
+    return;
+  }
+     
+  pt = hex2s(theForm.plaintext.value);
+  key = hex2s(theForm.key.value);
+  theForm.ciphertext.value = byteArrayToHex(rijndaelEncrypt(pt, key, "ECB"));
+
+}
+
+function doDecryption() {
+  var ct, key;
+  var theForm = document.forms[0];
+  blockSizeInBits=128;
+  keySizeInBits = theForm.keySize[theForm.keySize.selectedIndex].value;
+
+  if (theForm.key.value.toLowerCase().indexOf("0x") == 0)
+    theForm.key.value = theForm.key.value.substring(2);
+  if (theForm.ciphertext.value.toLowerCase().indexOf("0x") == 0)
+    theForm.ciphertext.value = theForm.ciphertext.value.substring(2);
+  
+  if (theForm.key.value.length*4 != keySizeInBits) {
+    alert("For a " + keySizeInBits + " bit key, the hex string needs to be " +
+          (keySizeInBits / 4) + " hex characters long.");
+    if (theForm.key.select)
+       theForm.key.select();
+    return;
+  }
+
+  if (theForm.ciphertext.value.length*4 != blockSizeInBits) {
+    alert("For a " + blockSizeInBits + " bit block, the hex ciphertext string needs to be " +
+          (blockSizeInBits / 4) + " hex characters long.");
+    if (theForm.ciphertext.select)
+       theForm.ciphertext.select();
+    return;
+  }
+     
+  ct = hex2s(theForm.ciphertext.value);
+  key = hex2s(theForm.key.value);
+  theForm.plaintext.value = byteArrayToHex(rijndaelDecrypt(ct, key, "ECB"));
+
+}
+// --></script>
+</head>
+
+<body>
+<h2 align=center>AES (Rijndael) Encryption Test in JavaScript</h2>
+<center><font size="-1">2005 Herbert Hanewinkel</font></center>
+<hr>
+<center>[<a href="aes.htm">Description</a>] [Test]</center>
+
+<p>
+<form name="aestest">
+<table><tr>
+<td><b>Key size in bits: </b></td>
+
+<td><select name="keySize">
+<option value="128" selected="selected">128</option>
+<option value="192">192</option>
+<option value="256">256</option>
+</select></td>
+</tr>
+
+<tr>
+<td><b>Key in hex: </b></td>
+<td><input type="text" size="66" name="key"></td></tr>
+<tr><td><b>Plaintext in hex: </b></td>
+<td><input type="text" size="66" name="plaintext"></td>
+</tr>
+
+<tr>
+<td><b>Ciphertext in hex: </b></td>
+<td><input type="text" size="66" name="ciphertext"></td>
+</tr>
+
+<tr>
+<td>&nbsp;</td>
+<td>
+<input type="button" value="Encrypt" onclick="doEncryption()"> &nbsp; &nbsp; 
+<input type="button" value="Decrypt" onclick="doDecryption()"> &nbsp; &nbsp; 
+<input type="reset" value="Clear"></td>
+</tr>
+</table>
+</form>
+</p>
+
+<p>
+The test vectors are from the AES supplied ones; more or less 
+randomly taken from ecb_tbl.txt (I=42,81,14)
+</p>
+
+<table>
+<tr><td>Key (128):</td><td><tt>E8E9EAEBEDEEEFF0F2F3F4F5F7F8F9FA</tt></td></tr>
+<tr><td>Plaintext:</td><td><tt>014BAF2278A69D331D5180103643E99A</tt></td></tr>
+<tr><td>Ciphertext:</td><td><tt>6743C3D1519AB4F2CD9A78AB09A511BD</tt></td></tr>
+<tr><td>&nbsp;</td></tr>
+<tr><td>Key (192):</td><td><tt>04050607090A0B0C0E0F10111314151618191A1B1D1E1F20</tt></td></tr>
+<tr><td>Plaintext:</td><td><tt>76777475F1F2F3F4F8F9E6E777707172</tt></td></tr>
+<tr><td>Ciphertext:</td><td><tt>5d1ef20dced6bcbc12131ac7c54788aa</tt></td></tr>
+<tr><td>&nbsp;</td></tr>
+<tr><td>Key (256):</td><td><tt>08090A0B0D0E0F10121314151718191A1C1D1E1F21222324262728292B2C2D2E</tt></td></tr>
+<tr><td>Plaintext:</td><td><tt>069A007FC76A459F98BAF917FEDF9521</tt></td></tr>
+<tr><td>Ciphertext:</td><td><tt>080e9517eb1677719acf728086040ae3</tt></td></tr>
+</table>
+
+<hr align=center width="99%">
+<table width="100%"><tr>
+<td>
+<font size="-1"><i>www.hanewin.de</i></font>
+</td>
+<td align=right><font size="-1"><i>
+<a href="http://www.hanewin.de/homee.htm" target="_top">Home</a>
+</i></font></td>
+</tr></table>
+</body>
+</html>

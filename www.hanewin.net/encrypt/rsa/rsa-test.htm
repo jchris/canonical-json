@@ -1,0 +1,168 @@
+<!doctype HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>RSA Public Key Encryption Demo</title>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+<meta content="MSHTML 5.50.4912.300" name=GENERATOR>
+
+<script src="rsa.js" type="text/javascript"></script>
+<script src="base64.js" type="text/javascript"></script>
+<script src="hex.js" type="text/javascript"></script>
+<script src="keygen.js" type="text/javascript"></script>
+
+<script language="Javascript" type="text/javascript">
+
+var keybits = [128,256,384,512];
+
+function genkey()
+{
+ var ix = document.t.keylen.selectedIndex;
+
+ var bits=keybits[ix];
+
+ var startTime=new Date();
+
+ rsaKeys(bits);
+ document.t.p.value=rsa_p;
+ document.t.q.value=rsa_q;
+ document.t.d.value=rsa_d;
+ document.t.e.value=rsa_e;
+ document.t.u.value=rsa_u;
+ document.t.pq.value=rsa_pq;
+
+ var mpi=s2r(b2mpi(rsa_pq)+b2mpi(rsa_e));
+ mpi=mpi.replace(/\n/,'');
+ document.t.pkey.value=mpi;
+ 
+ var endTime=new Date();
+ document.t.howLong.value=(endTime.getTime()-startTime.getTime())/1000.0;
+}
+
+function RSAdoEncryption()
+{
+ var mod=new Array();
+ var exp=new Array();
+ 
+ var s = r2s(document.t.pkey.value);
+ var l = Math.floor((s.charCodeAt(0)*256 + s.charCodeAt(1)+7)/8);
+
+ mod = mpi2b(s.substr(0,l+2));
+ exp = mpi2b(s.substr(l+2));
+
+ var p = hex2s(document.rsatest.plaintext.value)+String.fromCharCode(1);
+ var pl = p.length;
+
+ if(pl > l-3)
+ {
+    alert('Plain text length must be less than modulus of '+(l-3)+' bytes');
+    return;
+ }
+
+ var b=s2b(p);
+
+ var startTime=new Date();
+
+ // rsa encrypt the result and convert into mpi
+ enc = RSAencrypt(b,exp,mod);
+
+ document.rsatest.ciphertext.value=s2hex(b2s(enc));
+
+ var endTime=new Date();
+ document.rsatest.howLong.value=(endTime.getTime()-startTime.getTime())/1000.0;
+}
+
+function RSAdoDecryption()
+{
+  var p = rsa_p;
+  var q = rsa_q;
+  var d = rsa_d;
+  var u = rsa_u;
+
+  var startTime=new Date();
+
+  var enc=s2b(hex2s(document.rsatest.ciphertext.value));
+  var dec=b2s(RSAdecrypt(enc, d, p, q, u));
+
+  document.rsatest.plaintext.value=s2hex(dec.substr(0, dec.length-1));
+
+  var endTime=new Date();
+  document.rsatest.howLong.value=(endTime.getTime()-startTime.getTime())/1000.0;
+}
+
+</script>
+</head>
+
+<body bgcolor="#ffffff">
+<h2 align=center>RSA Public Key Encryption Demo</h2>
+<center><font size="-1">2005 Herbert Hanewinkel, adapted from John Hanna's RSA implementation</font></center>
+<hr>
+<center>[<a href="rsa.htm">Description</a>] [Test]</center>
+<p>
+<form name=t>
+<table>
+<tr><td>Random seed:</td><td><textarea name=rseed rows=5 cols=60 onchange=seed(this.value)></textarea></td></tr>
+<tr><td colspan=2><a href="http://www.random.org">Random.org</a>
+will provide us with a random seed by clicking
+<a target=_blank href="http://www.random.org/cgi-bin/randbyte?nbytes=1024&amp;format=hex">here</a>. 
+Copy the text, then paste it above.</td></tr>
+<tr><td></td></tr>
+<tr><td>No of RSA key bits:</td><td>
+<select size=1 name=keylen>
+<option>256</option>
+<option>512</option>
+<option selected>768</option>
+<option selected>1024</option>
+</select>
+</td></tr>
+
+<tr><td><input onclick="genkey()" type=button value="GenerateKey"></td></tr>
+<tr><td colspan=2>RSA operates with huge integers. They are displayed here as arrays
+of 28 Bit integers as used by the implementation.<br>
+Key generation in Javascript takes time(depending on your processors speed it could be minutes), please be patiented.</td></tr>
+<tr><td>prime factor p:</td><td><input size=80 name=p readonly></td></tr>
+<tr><td>prime factor q:</td><td><input size=80 name=q readonly></td></tr>
+<tr><td></td></tr>
+<tr><td>Public exponent (e):</td><td><input size=10 name=e readonly></td></tr>
+<tr><td>Public Modulo (p*q):</td><td><input size=80 name=pq readonly></td></tr>
+<tr><td>Private exponent (d):</td><td><input size=80 name=d readonly></td></tr>
+<tr><td>Private inverse  (u):</td><td><input size=80 name=u readonly></td></tr>
+<tr><td>&nbsp;</td></tr>
+<tr><td>OpenPGP Multi Precision Integer<br>(MPI) of Public Key (base64):</td>
+<td><input size=80 name=pkey readonly></td></tr>
+<tr><td></td>
+<td align=right>This took <input size=4 name=howLong> seconds</td></tr>
+</table>
+</form>
+</p>
+<hr>
+<form name="rsatest">
+<table><tr><td>Plaintext in hex:</td>
+<td colspan=2><input type="text" size="80" name="plaintext"></td>
+</tr>
+
+<tr>
+<td>Ciphertext in hex:</td>
+<td colspan=2><input type="text" size="80" name="ciphertext" readonly></td>
+</tr>
+
+<tr>
+<td>&nbsp;</td>
+<td>
+<input type="button" value="Encrypt" onclick="RSAdoEncryption()"> &nbsp; &nbsp; 
+<input type="button" value="Decrypt" onclick="RSAdoDecryption()"> &nbsp; &nbsp; 
+</td><td align=right>This took <input size=4 name=howLong> seconds</td></tr>
+</tr>
+</table>
+</form>
+
+<hr align=center width="99%">
+<table width="100%"><tr>
+<td>
+<font size="-1"><i>www.hanewin.de</i></font>
+</td>
+<td align=right><font size="-1"><i>
+<a href="http://www.hanewin.de/homee.htm" target="_top">Home</a>
+</i></font></td>
+</tr></table>
+
+</body>
