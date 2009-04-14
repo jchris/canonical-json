@@ -3,6 +3,26 @@
 * You must freely redistribute them with their source -- see the
 * GPL for details.
 *  -- Latest version found at http://sourceforge.net/projects/shop-js
+
+* Modifications 4/13/2009 by J Chris Anderson <jchris@apache.org>
+*/
+
+/* USAGE:
+
+I'm reverse engineering the public API from this mess of ten year old JavaScript.
+Thank you to the original developers for doing the crypto work. No thank you to
+1999 coding standards for making this a big ball of global variables.
+
+First step: document, second step: make sane
+
+call this to make the random seed from which you will work
+the seed should be a string of hexadecimal junk
+seedLength = seed(newSeed)
+
+OMG this takes a keySize (in bytes not bits) and a DOM form element (not kidding)
+Instead of a return value, it populates elements of the form with the results.
+genkey(keySize,document.t)
+
 */
 
 // seed the random number generator with entropy in s
