@@ -1,5 +1,5 @@
 /*
-    http://www.JSON.org/json2.js
+    Adapted from http://www.JSON.org/json2.js
     2008-11-19
 
     Public Domain.
@@ -159,7 +159,9 @@
 // methods in a closure to avoid creating global variables.
 
 if (!this.JSON) {
-    JSON = {};
+    JSON = {
+      floatPrecision: 8
+    };
 }
 (function () {
 
@@ -220,6 +222,10 @@ if (!this.JSON) {
             '"' + string + '"';
     }
 
+    function roundNum(num) {
+      var mult = Math.pow(10, JSON.floatPrecision);
+      return Math.round(num * mult) / mult;
+    };
 
     function str(key, holder) {
 
@@ -257,7 +263,7 @@ if (!this.JSON) {
 
 // JSON numbers must be finite. Encode non-finite numbers as null.
 
-            return isFinite(value) ? String(value) : 'null';
+            return isFinite(value) ? String(roundNum(value)) : 'null';
 
         case 'boolean':
         case 'null':
@@ -325,14 +331,21 @@ if (!this.JSON) {
             } else {
 
 // Otherwise, iterate through all of the keys in the object.
-
+                var ks = [];
                 for (k in value) {
-                    if (Object.hasOwnProperty.call(value, k)) {
-                        v = str(k, value);
-                        if (v) {
-                            partial.push(quote(k) + (gap ? ': ' : ':') + v);
-                        }
-                    }
+                  ks.push(k)
+                }
+                ks.sort()
+                length = ks.length;
+                var k;
+                for (i = 0; i < length; i += 1) {
+                  k = ks[i];
+                  if (Object.hasOwnProperty.call(value, k)) {
+                      v = str(k, value);
+                      if (v) {
+                          partial.push(quote(k) + (gap ? ': ' : ':') + v);
+                      }
+                  }
                 }
             }
 
