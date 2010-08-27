@@ -42,19 +42,9 @@
         dec : 4.1
       };
       var c = CJSON.stringify(obj);
-      console.log(c)
-      // maybe I would prefer if tiny were 0.00
+
       T(c == '{"dec":4.1,"integer":5,"sixes":0.67,"third":0.33,"tiny":0}',
       "floats are rounded by precision");
-
-      // tests for object signing
-      // var obj = {
-      //   message : "text"
-      // }
-      // var signed = GPG.sign(obj, "message", pubkey);
-      // T(signed.signatures.message, 
-      //   "should create a signatures field");
-      
       
     </script>
   </head>
