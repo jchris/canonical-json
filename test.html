@@ -3,12 +3,12 @@
   <head>
     <meta http-equiv="Content-type" content="text/html; charset=utf-8">
     <title>Repeatable JSON Serialization Test</title>
-    <script src="cjson.js"></script>
+    <script src="c2j.js"></script>
     <script type="text/javascript" charset="utf-8">
       T = fireunit.ok;
 
       // tests for repeatable serializations
-      var c = CJSON.stringify({foo : "bar"});
+      var c = JSON.stringify({foo : "bar"});
       T(c == '{"foo":"bar"}', "basic");
 
       var obj = {
@@ -16,7 +16,7 @@
         "baz" : "bam",
         "zam" : "zing"
       };
-      c = CJSON.stringify(obj);
+      c = JSON.stringify(obj);
       T(c == '{"baz":"bam","foo":"bar","zam":"zing"}',
         "sorted by key");      
 
@@ -29,11 +29,11 @@
         },
         "zam" : "zing"
       };
-      var c = CJSON.stringify(obj);
+      var c = JSON.stringify(obj);
       T(c == '{"baz":{"abba":1,"fabba":2,"zabba":3},"foo":"bar","zam":"zing"}',
         "sorted recursively");
 
-      CJSON.floatPrecision = 2;
+      JSON.floatPrecision = 2;
       var obj = {
         tiny : (1/99999999999999999999999999),
         third : (1/3),
@@ -41,7 +41,7 @@
         integer : 5,
         dec : 4.1
       };
-      var c = CJSON.stringify(obj);
+      var c = JSON.stringify(obj);
 
       T(c == '{"dec":4.1,"integer":5,"sixes":0.67,"third":0.33,"tiny":0}',
       "floats are rounded by precision");
