@@ -336,20 +336,18 @@ if (!this.JSON) {
 // Otherwise, iterate through all of the keys in the object.
                 var ks = [];
                 for (k in value) {
-                  if (Object.hasOwnProperty.call(value, k)) {
-                    ks.push(k);
-                  }
+                    if (Object.hasOwnProperty.call(value, k)) {
+                        ks.push(k);
+                    }
                 }
                 ks.sort();
                 length = ks.length;
                 for (i = 0; i < length; i += 1) {
-                  k = ks[i];
-                  if (Object.hasOwnProperty.call(value, k)) {
-                      v = str(k, value);
-                      if (v) {
-                          partial.push(quote(k) + (gap ? ': ' : ':') + v);
-                      }
-                  }
+                    k = ks[i];
+                    v = str(k, value);
+                    if (v) {
+                        partial.push(quote(k) + (gap ? ': ' : ':') + v);
+                    }
                 }
             }
 
