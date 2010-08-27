@@ -19,7 +19,7 @@
     This file creates a global JSON object containing two methods: stringify
     and parse.
 
-        JSON.stringify(value, replacer, space)
+        JSOND.stringify(value, replacer, space)
             value       any JavaScript value, usually an object or array.
 
             replacer    an optional parameter that determines how object
@@ -74,7 +74,7 @@
             functions, will not be serialized. Such values in objects will be
             dropped; in arrays they will be replaced with null. You can use
             a replacer function to replace those with JSON values.
-            JSON.stringify(undefined) returns undefined.
+            JSOND.stringify(undefined) returns undefined.
 
             The optional space parameter produces a stringification of the
             value that is filled with line breaks and indentation to make it
@@ -86,21 +86,21 @@
 
             Example:
 
-            text = JSON.stringify(['e', {pluribus: 'unum'}]);
+            text = JSOND.stringify(['e', {pluribus: 'unum'}]);
             // text is '["e",{"pluribus":"unum"}]'
 
 
-            text = JSON.stringify(['e', {pluribus: 'unum'}], null, '\t');
+            text = JSOND.stringify(['e', {pluribus: 'unum'}], null, '\t');
             // text is '[\n\t"e",\n\t{\n\t\t"pluribus": "unum"\n\t}\n]'
 
-            text = JSON.stringify([new Date()], function (key, value) {
+            text = JSOND.stringify([new Date()], function (key, value) {
                 return this[key] instanceof Date ?
                     'Date(' + this[key] + ')' : value;
             });
             // text is '["Date(---current time---)"]'
 
 
-        JSON.parse(text, reviver)
+        JSOND.parse(text, reviver)
             This method parses a JSON text to produce an object or array.
             It can throw a SyntaxError exception.
 
@@ -115,7 +115,7 @@
             // Parse the text. Values that look like ISO date strings will
             // be converted to Date objects.
 
-            myData = JSON.parse(text, function (key, value) {
+            myData = JSOND.parse(text, function (key, value) {
                 var a;
                 if (typeof value === 'string') {
                     a =
@@ -128,7 +128,7 @@
                 return value;
             });
 
-            myData = JSON.parse('["Date(09/09/2001)"]', function (key, value) {
+            myData = JSOND.parse('["Date(09/09/2001)"]', function (key, value) {
                 var d;
                 if (typeof value === 'string' &&
                         value.slice(0, 5) === 'Date(' &&
@@ -159,8 +159,8 @@
 // Create a JSON object only if one does not already exist. We create the
 // methods in a closure to avoid creating global variables.
 
-if (!this.JSON) {
-    JSON = {
+if (!this.JSOND) {
+    JSOND = {
       floatPrecision: 8
     };
 }
@@ -226,7 +226,7 @@ if (!this.JSON) {
     }
 
     function roundNum(num) {
-      var mult = Math.pow(10, JSON.floatPrecision);
+      var mult = Math.pow(10, JSOND.floatPrecision);
       return Math.round(num * mult) / mult;
     }
 
@@ -364,8 +364,8 @@ if (!this.JSON) {
 
 // If the JSON object does not yet have a stringify method, give it one.
 
-    if (typeof JSON.stringify !== 'function') {
-        JSON.stringify = function (value, replacer, space) {
+    if (typeof JSOND.stringify !== 'function') {
+        JSOND.stringify = function (value, replacer, space) {
 
 // The stringify method takes a value and an optional replacer, and an optional
 // space parameter, and returns a JSON text. The replacer can be a function
@@ -398,7 +398,7 @@ if (!this.JSON) {
             if (replacer && typeof replacer !== 'function' &&
                     (typeof replacer !== 'object' ||
                      typeof replacer.length !== 'number')) {
-                throw new Error('JSON.stringify');
+                throw new Error('JSOND.stringify');
             }
 
 // Make a fake root object containing our value under the key of ''.
@@ -411,8 +411,8 @@ if (!this.JSON) {
 
 // If the JSON object does not yet have a parse method, give it one.
 
-    if (typeof JSON.parse !== 'function') {
-        JSON.parse = function (text, reviver) {
+    if (typeof JSOND.parse !== 'function') {
+        JSOND.parse = function (text, reviver) {
 
 // The parse method takes a text and an optional reviver function, and returns
 // a JavaScript value if the text is a valid JSON text.
@@ -488,7 +488,7 @@ if (!this.JSON) {
 
 // If the text is not JSON parseable, then a SyntaxError is thrown.
 
-            throw new SyntaxError('JSON.parse');
+            throw new SyntaxError('JSOND.parse');
         };
     }
 }());
