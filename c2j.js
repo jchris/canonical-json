@@ -152,7 +152,7 @@
     call, charCodeAt, getUTCDate, getUTCFullYear, getUTCHours,
     getUTCMinutes, getUTCMonth, getUTCSeconds, hasOwnProperty, join,
     lastIndex, length, parse, prototype, push, replace, slice, stringify,
-    test, toJSON, toString, valueOf
+    test, toJSON, toString, valueOf, floatPrecision, pow, round, sort
 */
 
 
@@ -228,7 +228,7 @@ if (!this.JSON) {
     function roundNum(num) {
       var mult = Math.pow(10, JSON.floatPrecision);
       return Math.round(num * mult) / mult;
-    };
+    }
 
     function str(key, holder) {
 
@@ -334,11 +334,13 @@ if (!this.JSON) {
             } else {
 
 // Otherwise, iterate through all of the keys in the object.
-                var k, ks = [];
+                var ks = [];
                 for (k in value) {
-                  ks.push(k)
+                  if (Object.hasOwnProperty.call(value, k)) {
+                    ks.push(k);
+                  }
                 }
-                ks.sort()
+                ks.sort();
                 length = ks.length;
                 for (i = 0; i < length; i += 1) {
                   k = ks[i];
