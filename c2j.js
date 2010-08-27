@@ -334,13 +334,12 @@ if (!this.JSON) {
             } else {
 
 // Otherwise, iterate through all of the keys in the object.
-                var ks = [];
+                var k, ks = [];
                 for (k in value) {
                   ks.push(k)
                 }
                 ks.sort()
                 length = ks.length;
-                var k;
                 for (i = 0; i < length; i += 1) {
                   k = ks[i];
                   if (Object.hasOwnProperty.call(value, k)) {
